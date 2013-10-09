@@ -1550,8 +1550,8 @@ class MarkovChainMonteCarlo(object):
             ### extract parameter set
             ain = theta[x]
             ### compute model 'true' spectrum
-            mpower = self.func(self.x, *ain)
-
+#            mpower = self.func(self.x, *ain)
+            mpower = func(self.x, *ain)
             ### define distribution
 #            if dist == "exp":
 #                #print("Distribution is exponential!")
