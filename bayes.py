@@ -680,7 +680,7 @@ class Bayes(object):
 
             plt.savefig(self.namestr + '_maxpow.png', format='png')
 
-        results = {"fitpars":fitpars, 'bindict':bindict, 'p_maxpow':[sim_maxpow, p_maxpow, pmaxpow_err], 'maxpow_ul':maxpow_ul, 'p_s3max':[sim_s3max, p_s3max, ps3max_err], 'p_s5max':[sim_s5max, p_s5max, ps5max_err], 'p_s11max':[sim_s11max, p_s11max, ps11max_err], 'p_merit':[p_merit, pmerit_err], 'p_srat':[p_srat, psrat_err], 'p_deviance':[p_deviance, pdeviance_err], 'fitpars':fitpars,  "postmean":mcobs.mean, "posterr":mcobs.std, "postquantiles":mcobs.ci, "rhat":mcobs.rhat, "acor":mcobs.acor, "acceptance":mcobs.acceptance}
+        results = {"fitpars":fitpars, 'bindict':bindict, 'mcobs':mcobs, 'p_maxpow':[sim_maxpow, p_maxpow, pmaxpow_err], 'maxpow_ul':maxpow_ul, 'p_s3max':[sim_s3max, p_s3max, ps3max_err], 'p_s5max':[sim_s5max, p_s5max, ps5max_err], 'p_s11max':[sim_s11max, p_s11max, ps11max_err], 'p_merit':[p_merit, pmerit_err], 'p_srat':[p_srat, psrat_err], 'p_deviance':[p_deviance, pdeviance_err], 'fitpars':fitpars,  "postmean":mcobs.mean, "posterr":mcobs.std, "postquantiles":mcobs.ci, "rhat":mcobs.rhat, "acor":mcobs.acor, "acceptance":mcobs.acceptance}
 
 
         return results
