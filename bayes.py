@@ -13,6 +13,8 @@
 #!/usr/bin/env python
 
 from __future__ import print_function
+import matplotlib
+matplotlib.use("agg")
 import matplotlib.pyplot as plt
 from pylab import *
 from matplotlib.ticker import MaxNLocator
