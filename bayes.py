@@ -13,8 +13,9 @@
 #!/usr/bin/env python
 
 from __future__ import print_function
-import matplotlib
-matplotlib.use("agg")
+#import matplotlib
+#matplotlib.use("agg")
+
 import matplotlib.pyplot as plt
 from pylab import *
 from matplotlib.ticker import MaxNLocator
@@ -1366,7 +1367,7 @@ class MarkovChainMonteCarlo(object):
         plt.xlabel("R_hat")
         plt.ylabel("Parameter")
         plt.title('Rhat')
-        plt.savefig(namestr + '_rhat.ps')
+        plt.savefig(namestr + '_rhat.png', format='png')
         plt.close()
 
 
@@ -1394,7 +1395,7 @@ class MarkovChainMonteCarlo(object):
             plt.xlabel("80% region (scaled)")
             plt.ylabel("Parameter") 
             plt.title("80% quantiles")
-            plt.savefig(namestr + "_quantiles.ps")
+            plt.savefig(namestr + "_quantiles.png", format="png")
             plt.close()
 
     def mcmc_infer(self, namestr='test', printobj = None):
