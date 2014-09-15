@@ -1,4 +1,4 @@
-Bayesian Periodogram Analysis in Python!
+BayesPSD
+========
 
-OVERVIEW:
-
+Bayesian power spectral analysis tools
