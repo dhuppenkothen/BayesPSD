@@ -9,4 +9,4 @@ Requirements:
 - scipy
 - matplotlib
 - statsmodels
-- UTools (another git repository I have)
+- UTools (https://github.com/dhuppenkothen/UTools ; make sure it's in your pythonpath!)
