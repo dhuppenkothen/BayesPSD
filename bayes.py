@@ -1653,7 +1653,7 @@ class MarkovChain(object):
             logr = pprop - logp[t-1]
             logr = min(logr, 0.0)
             r= np.exp(logr)
-            update = choice([True, False], size=1, weights=[r, 1.0-r])
+            update = choice([True, False], size=1, p=[r, 1.0-r])
 #            print("update: " + str(update))
 
             if update:
@@ -1671,7 +1671,7 @@ class MarkovChain(object):
             #print("logr: " + str(logr))
             #r = logr #np.exp(logr)
 
-            #samplechoice = choice([True, False], size=1, weights=[0.1, 0.9])
+            #samplechoice = choice([True, False], size=1, p=[0.1, 0.9])
 
             #if r > 0.0:# or not samplechoice:
             #    ttemp.append(tprop)
@@ -1681,7 +1681,7 @@ class MarkovChain(object):
 
             #else:
             #    print "r: " + str(r)
-            #    newset = choice([[tprop, pprop], [ttemp[t-1], logp[t-1]]], size=1, weights=[np.exp(r), 1.0-np.exp(r)])
+            #    newset = choice([[tprop, pprop], [ttemp[t-1], logp[t-1]]], size=1, p=[np.exp(r), 1.0-np.exp(r)])
             #    ttemp.append(newset[0][0])
             #    logp.append(newset[0][1]) 
             #    if newset[0][0].all() == tprop.all() and t > self.discard:
@@ -1715,7 +1715,7 @@ class MarkovChain(object):
 #                raise Exception("r > 1! This cannot be true!")
 #
 #            ### with chance r, the number is updated 
-#            update = choice([True, False], size=1, weights=[r,1.0-r])
+#            update = choice([True, False], size=1, p=[r,1.0-r])
 #            #print "update" + str(update)
 #
 #
