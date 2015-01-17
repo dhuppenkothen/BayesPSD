@@ -1,65 +1,4 @@
-## BAYESIAN ANALYSIS FOR PERIODOGRAMS
-#
-# 
-#
-#
-# TO DO LIST:
-# - add functionality for mixture models/QPOs to mlprior
-# - add logging
-# - add smoothing to periodograms to pick out narrow signals
-# - add proposal distributions to emcee implementation beyond Gaussian
-#
-
-#!/usr/bin/env python
-
-from __future__ import print_function
-#import matplotlib
-#matplotlib.use("agg")
-
-import matplotlib.pyplot as plt
-from pylab import *
-from matplotlib.ticker import MaxNLocator
-import cPickle as pickle
-import copy
-#import matplotlib
-#matplotlib.use('png')
-
-
-### GENERAL IMPORTS ###
-import numpy as np
-import scipy.optimize
-from scipy.stats.mstats import mquantiles as quantiles
-import scipy.stats
-import time as tsys
-import math
-
-
-### New: added possibility to use emcee for MCMCs
-try:
-   import emcee
-   import acor
-   emcee_import = True
-except ImportError:
-   print("Emcee and Acor not installed. Using Metropolis-Hastings algorithm for Markov Chain Monte Carlo simulations.")
-   emcee_import = False
-
-
-### OWN SCRIPTS
-import generaltools as gt
-import lightcurve
-import powerspectrum
-import mle
-import posterior
-
-
-### Hack for Numpy Choice function ###
-#
-# Will be slow for large arrays.
-#
-#
-# Input: - data= list to pick from
-#        - weights = statistical weight of each element in data
-#          if no weights are given, all choices are equally likely
+choices are equally likely
 #        - size = number of choices to generate (default: one)
 #
 # Output: - either single entry from data, chosen according to weights
@@ -70,9 +9,9 @@ import posterior
 # replaced, i.e. can be picked again!
 #
 #
-def choice_hack(data, weights=None, size=None):
+def choice_hack(data, p=None, size=None):
 
-
+    weights = p
 
     #print "len(data): " + str(len(data))
     ### if no weights are given, all choices have equal probability
