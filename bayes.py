@@ -1,4 +1,4 @@
-choices are equally likely
+#choices are equally likely
 #        - size = number of choices to generate (default: one)
 #
 # Output: - either single entry from data, chosen according to weights
