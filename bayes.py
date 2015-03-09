@@ -1,8 +1,63 @@
-#choices are equally likely
-#        - size = number of choices to generate (default: one)
+## BAYESIAN ANALYSIS FOR PERIODOGRAMS
+#
+#
+#
+#
+# TO DO LIST:
+# - add functionality for mixture models/QPOs to mlprior
+# - add logging
+# - add smoothing to periodograms to pick out narrow signals
+# - add proposal distributions to emcee implementation beyond Gaussian
+#
+#!/usr/bin/env python
+from __future__ import print_function
+#import matplotlib
+#matplotlib.use("agg")
+import matplotlib.pyplot as plt
+from pylab import *
+from matplotlib.ticker import MaxNLocator
+
+import cPickle as pickle
+import copy
+#import matplotlib
+#matplotlib.use('png')
+
+### GENERAL IMPORTS ###
+import numpy as np
+import scipy.optimize
+from scipy.stats.mstats import mquantiles as quantiles
+import scipy.stats
+import time as tsys
+import math
+
+### New: added possibility to use emcee for MCMCs
+try:
+    import emcee
+#    import acor
+    emcee_import = True
+except ImportError:
+    print("Emcee and Acor not installed. Using Metropolis-Hastings algorithm for Markov Chain Monte Carlo simulations.")
+    emcee_import = False
+
+### OWN SCRIPTS
+import generaltools as gt
+import lightcurve
+import powerspectrum
+import mle
+import posterior
+
+### Hack for Numpy Choice function ###
+#
+# Will be slow for large arrays.
+#
+#
+# Input: - data= list to pick from
+# - weights = statistical weight of each element in data
+# if no weights are given, all choices are equally likely
+# - size = number of choices to generate (default: one)
 #
 # Output: - either single entry from data, chosen according to weights
-#         - or a list of choices 
+# - or a list of choices
 #
 # Note that unlike numpy.random.choice, this function has no "replace"
 # option! This means that elements picked from data will *always* be
@@ -55,17 +110,12 @@ def choice_hack(data, p=None, size=None):
 
     return choice_data
 
-
-
 ### See if cutting-edge numpy is installed so I can use choice
 try:
     from numpy.random import choice
      ### if not, use hack
 except ImportError:
     choice = choice_hack
-
-
-
 
 
 ### Compute log posterior ###
@@ -385,7 +435,7 @@ class Bayes(object):
         psfit = mle.PerMaxLike(self.ps, fitmethod=fitmethod, obs=True)
         fitpars = psfit.mlest(func, par, bounds=bounds, obs=True, noise=noise, m=self.m)
         bindict = fitpars['bindict']
-        print('popt: ' + str(fitpars['popt']))
+        #print('popt: ' + str(fitpars['popt']))
 
 
         if self.m == 1:
@@ -470,7 +520,7 @@ class Bayes(object):
         ninetyfiveperlim = len(sim_maxpow) - fiveperlim
 
 
-        print('popt4: ' + str(fitpars['popt']))
+        #print('popt4: ' + str(fitpars['popt']))
         bindicts = [x["bindict"] for x in sim_pars_all] 
         ### get out binned powers:
 
@@ -517,8 +567,8 @@ class Bayes(object):
             elif self.ps.norm == 'variance':
                 binpowers = binpowers*self.ps.n**2.0 / (self.ps.df*b*self.ps.nphots**2.0)
 
-            print('len(binps.freq): ' + str(len(binps.freq)))
-            print('len(binpowers): ' + str(len(binpowers)))
+            #print('len(binps.freq): ' + str(len(binps.freq)))
+            #print('len(binpowers): ' + str(len(binpowers)))
 
 
             ## for 40 Hz: 
@@ -676,18 +726,18 @@ class Bayes(object):
 
         funcname = str(func).split()[1]
 
-        print("<< --- len(self.ps beginning): " + str(len(self.ps.ps)))
+        #print("<< --- len(self.ps beginning): " + str(len(self.ps.ps)))
 
         ### step 1: fit model to observation
         psfit = mle.PerMaxLike(self.ps, fitmethod=fitmethod, obs=True)
         fitpars = psfit.mlest(func, ain, bounds=bounds, obs=True, noise=-1, m=self.m)
 
-        print("<< --- len(self.ps beginning): " + str(len(self.ps.ps)))
+        #print("<< --- len(self.ps beginning): " + str(len(self.ps.ps)))
 
 
         #obslrt, optpars, qpopars = psfit.find_qpo(func, ain, bounds=bounds, plot=True, obs=True, plotname = self.namestr+'_loglikes')
 
-        print("<< --- len(self.ps beginning): " + str(len(self.ps.ps)))
+        #print("<< --- len(self.ps beginning): " + str(len(self.ps.ps)))
 
 
         if self.m == 1:
@@ -841,7 +891,7 @@ class Bayes(object):
         except KeyError:
             print("Module Acor not found. Cannot compute autocorrelation times for the parameters")
         for i,x in enumerate(postpars["rhat"]):
-            print("The R_hat value for Parameter " + str(i) + " is " + str(x))
+            print("The $R_hat$ value for Parameter " + str(i) + " is " + str(x))
 
 
         ### print posterior summary of parameters:
@@ -927,7 +977,7 @@ class Bayes(object):
         except KeyError:
             file.write("Module Acor not found. Cannot compute autocorrelation times for the parameters \n")
         for i,x in enumerate(postpars["rhat"]):
-            file.write("The R_hat value for Parameter " + str(i) + " is " + str(x) + "\n")
+            file.write("The $R_hat$ value for Parameter " + str(i) + " is " + str(x) + "\n")
 
 
         ### print posterior summary of parameters:
@@ -1070,10 +1120,10 @@ class MarkovChainMonteCarlo(object):
         self.x = x
         self.y = y
 
-        if printobj:
-            print = printobj
-        else:
-            from __builtin__ import print as print      
+        #if printobj:
+        #    print = printobj
+        #else:
+        #    from __builtin__ import print as print      
 
         self.plot = plot
         print("<--- self.ps len MCMC: " + str(len(self.x)))
@@ -1201,10 +1251,10 @@ class MarkovChainMonteCarlo(object):
     def _rhat(self, mcall, printobj = None):
 
 
-        if printobj:
-            print = printobj
-        else:
-            from __builtin__ import print as print 
+        #if printobj:
+        #    print = printobj
+        #else:
+        #    from __builtin__ import print as print 
 
         print("Computing Rhat. The closer to 1, the better!")
 
@@ -1292,10 +1342,10 @@ class MarkovChainMonteCarlo(object):
     def check_convergence(self, mcall, namestr, printobj=None, use_emcee = True):
 
 
-        if printobj:
-            print = printobj
-        else:
-            from __builtin__ import print as print
+        #if printobj:
+        #    print = printobj
+        #else:
+        #    from __builtin__ import print as print
 
         ### compute Rhat for all parameters
         rh = self._rhat(mcall, printobj)               
@@ -1303,7 +1353,7 @@ class MarkovChainMonteCarlo(object):
 
         plt.scatter(rh, np.arange(len(rh))+1.0 )
         plt.axis([0.1,2,0.5,0.5+len(rh)])
-        plt.xlabel("R_hat")
+        plt.xlabel("$R_hat$")
         plt.ylabel("Parameter")
         plt.title('Rhat')
         plt.savefig(namestr + '_rhat.png', format='png')
@@ -1339,10 +1389,10 @@ class MarkovChainMonteCarlo(object):
 
     def mcmc_infer(self, namestr='test', printobj = None):
 
-        if printobj:
-            print = printobj
-        else:
-            from __builtin__ import print as print
+        #if printobj:
+        #    print = printobj
+        #else:
+        #    from __builtin__ import print as print
 
 
         ### covariance of the parameters from simulations
@@ -1509,10 +1559,10 @@ class MarkovChainMonteCarlo(object):
 #            else:
 #                raiseException("Distribution not recognized")
             if self.m == 1:
-                print("m = 1")
+                #print("m = 1")
                 noise = np.random.exponential(size=len(self.x))
             else:
-                print("m = " + str(self.m))
+                #print("m = " + str(self.m))
                 noise = np.random.chisquare(2*self.m, size=len(self.x))/(2.0*self.m)
 
 
@@ -1741,10 +1791,10 @@ class MarkovChain(object):
 
     def run_diagnostics(self, namestr=None, paraname=None, printobj = None):
 
-        if printobj:
-            print = printobj
-        else:
-            from __builtin__ import print as print
+        #if printobj:
+        #    print = printobj
+        #else:
+        #    from __builtin__ import print as print
 
         print("Markov Chain acceptance rate: " + str(self.accept) +".")
 
