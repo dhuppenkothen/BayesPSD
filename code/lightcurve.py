@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 import numpy
 import math
 import numpy as np
-import fractions
+
 import scipy.optimize
 
 
