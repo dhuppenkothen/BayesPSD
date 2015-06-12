@@ -12,7 +12,6 @@
 #!/usr/bin/env python
 from __future__ import print_function
 
-
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MaxNLocator
 
@@ -22,11 +21,9 @@ import copy
 ### GENERAL IMPORTS ###
 import numpy as np
 
-import time as tsys
-
 
 ### OWN SCRIPTS
-import generaltools as gt
+import utils
 import powerspectrum
 import mcmc
 
@@ -194,10 +191,8 @@ class Bayes(object):
 
         """
 
-        tstart = tsys.clock()
-
         resfilename = self.namestr + "_choosenoisemodel.dat"
-        resfile = gt.TwoPrint(resfilename)
+        resfile = utils.TwoPrint(resfilename)
 
 
         ### make strings for function names from function definition
@@ -320,8 +315,6 @@ class Bayes(object):
                 plt.savefig(self.namestr + '_lrt.png', format='png')
                 plt.close()
 
-            tend = tsys.clock()
-            resfile("Time for " + str(nsim) + " simulations: " + str(tend-tstart) + " seconds.")
 
             summary = {"p_lrt":[p_lrt, plrt_err], "p_maxpow":[p_maxpow, pmaxpow_err], "p_deviance":[p_deviance, pdeviance_err], "p_ksp":[p_ksp, pksp_err], "p_merit":[p_merit, pmerit_err], "p_srat":[p_srat, psrat_err], "postmean":mcobs.mean, "posterr":mcobs.std, "postquantiles":mcobs.ci,"rhat":mcobs.rhat, "acor":mcobs.acor, "acceptance":mcobs.acceptance}
 
@@ -423,7 +416,7 @@ class Bayes(object):
         resfilename = self.namestr + "_findperiodicity_results.dat"
 
         ## open the output log file
-        resfile = gt.TwoPrint(resfilename)
+        resfile = utils.TwoPrint(resfilename)
 
 
         ### step 1: fit model to observation
@@ -754,7 +747,6 @@ class Bayes(object):
         if plotstr == None:
             plotstr = self.namestr
 
-        tstart = tsys.clock()
 
         funcname = str(func).split()[1]
 
@@ -864,8 +856,6 @@ class Bayes(object):
             plt.vlines(obslrt, 0.0, 0.8*max(n), lw=4, color='m')
             plt.savefig(self.namestr + '_qpolrt.png', format='png')
             plt.close()
-        tend = tsys.clock()
-        print("Time for " + str(nsim) + " simulations: " + str(tend-tstart) + " seconds.")
 
         summary = {"p_lrt":[p_lrt, plrt_err],
                    "p_deviance":[p_deviance, pdeviance_err],
