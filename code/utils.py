@@ -1,4 +1,8 @@
 
+from __future__ import with_statement
+from collections import defaultdict
+
+
 import numpy as np
 import scipy
 
@@ -200,4 +204,174 @@ def autocorr(x, nlags = 100, fourier=False, norm = True):
     else:
         rnew = r
     return rnew
+
+##################################################################################
+#### MAKE A GENERAL DATA OBJECT ###################################
+#
+# This is a general class for X-ray and Gamma-Ray data with methods
+# for filtering data.
+#
+# Note: Strictly speaking, this serves as a superclass for its subclasses,
+# supplying common attributes and methods.
+# DON'T CALL THIS CLASS BY ITSELF! RATHER CALL A SUBCLASS!
+#
+# Subclasses:	 gbm.GBMData, rxte.RXTEData
+#
+#
+#
+class Data(object):
+    def __init__(self):
+        raise Exception("Don't run this! Use subclass RXTEData or GBMData instead!")
+
+    ### Filter out photons that are outside energy thresholds cmin and cmax
+    def filterenergy(self, cmin, cmax):
+        self.photons= [s for s in self.photons if s._in_range(cmin, cmax)]
+
+    ### For instruments supplying good time intervals, this function enables
+    ### GTI filtering
+    ### GTIs can eitehr be passed into the function or are an attribute of the
+    ### data subclass used.
+    def filtergti(self, gti=None):
+        if not gti:
+            gti = self.gti
+        gti=_checkinput(gti)
+        #print gti
+        filteredphotons = []
+        ### Use _unbarycentered_ time to filter GTIs
+        ### NEED TO CHECK WHETHER THAT IS TRUE FOR BOTH
+        ### RXTE AND GBM !!!
+        times = np.array([t.unbarycentered for t in self.photons])
+        ### note: this method below is more clunky than using filter(),
+        ### but it's much faster, too! :-)
+        for g in gti:
+            tmin = times.searchsorted(g[0])
+            tmax = times.searchsorted(g[1])
+            photons = self.photons[tmin:tmax]
+            filteredphotons.extend(photons)
+        self.photons = filteredphotons
+
+
+    ### NEED TO TEST THIS PROPERLY!
+    ### Filter for a burst, using a tuple or list in bursttimes
+    ### if blen is not given, then it is calculated from bursttimes.
+    ### the flag 'bary' sets whether bursttimes are barycentered.
+    def filterburst(self, bursttimes, blen=None, bary=False):
+        tstart= bursttimes[0]
+        tend = bursttimes[1]
+        if blen is None:
+            blen = tend - tstart
+
+        #tunbary = np.array([s.unbarycentered for s in self.photons])
+        time = np.array([s.time for s in self.photons])
+
+        ### The bary flag sets whether the burst times are barycentered
+        ### or not. By default (especially for RXTE data), this is not the
+        ### case. For GBM data, it usually is
+        if bary == False:
+            tunbary = np.array([s.time for s in self.photons])
+            stind = tunbary.searchsorted(tstart)
+            eind = tunbary.searchsorted(tend)
+        else:
+            stind = time.searchsorted(tstart)
+            eind = time.searchsorted(tend)
+
+        self.burstphot = self.photons[stind:eind]
+
+    ### Barycenter Times of Arrival ###
+    ### Note that this needs barycentered position history data
+    ### supplied in the form of a PosHist object (or relevant subclasses)
+    def obsbary(self, poshist):
+
+        ### photon times of arrival in MET seconds
+        tobs = np.array([s.time for s in self.photons])
+        ### barycentered satellite position history time stamps in MET seconds
+        phtime = np.array([s.phtime for s in poshist.satpos])
+        ### Interpolate barycentering correction to photon TOAs
+        tcorr = np.interp(tobs, phtime, poshist.tdiff)
+        ### barycentered photon TOAs in TDB seconds since MJDREFI
+        ctbarytime = (tobs + tcorr)
+        ctbarymet = ctbarytime + self.mjdreff*8.64e4  # barycentered TOA in MET seconds
+
+        ### barycenter trigger time the same way as TOAs
+        trigcorr = np.interp(self.trigtime, phtime, tdiff)
+        trigcorr = (self.trigtime + trigcorr)
+
+        ### barycentered photon TOAs in seconds since trigger time
+        ctbarytrig = ctbarytime - trigcorr
+        ### barycentered photon TOAs as Julian Dates
+        ctbaryjd = ctbarytime/8.64e4 + self.mjdrefi + 2400000.5
+
+        ### return dictionary with TOAs in different formats
+        ctbary = {'barys': ctbarytime, 'trigcorr': trigcorr, 'barymet': ctbarymet, 'barytrig': ctbarytrig, 'baryjd': ctbaryjd}
+        return ctbary
+
+
+
+#### PHOTON CLASS ###############################################
+#
+# General Photon class, with subclasses for specific instruments.
+# Instances of these class are objects with at least two attributes:
+# - photon arrival time
+# - energy/ channel the photon was detected in
+#
+# Subclasses: gbm.GBMPhoton, rxte.RXTEPhoton, SatPos
+#
+#
+#
+class Photon(object):
+    def __init__(self, time, energy):
+         self.time = time
+         self.energy=energy
+
+    ### convert mission time to Modified Julian Date
+    def mission2mjd(self, mjdrefi, mjdreff, timezero=0.0):
+        self.mjd = (mjdrefi + mjdreff) + (self.time + timezero)/86400.0
+
+    ### Auxiliary function for computation of energy boundaries
+    ### DON'T CALL ON OBJECT, CALL WITHIN APPROPRIATE METHOD!
+    def _in_range(self, lower, upper):
+        if lower <= self.energy <= upper:
+            return True
+        else:
+            return False
+
+###################################################################
+
+
+######################################################################################
+def _checkinput(gti):
+    if len(gti) == 2:
+        try:
+            iter(gti[0])
+        except TypeError:
+            return [gti]
+    return gti
+
+
+######################################################################################
+
+
+
+def conversion(filename):
+    f=open(filename, 'r')
+    output_lists=defaultdict(list)
+    for line in f:
+        if not line.startswith('#'):
+             line=[value for value in line.split()]
+             for col, data in enumerate(line):
+                 output_lists[col].append(data)
+    return output_lists
+
+
+##### GET DATA FROM PICKLED PYTHON OBJECT (FROM PROCESSING PIPELINE)
+#
+# Pickling data is a really easy way to store data in binary format.
+# This function reads back pickled data and stores it in memory.
+#
+#
+def getpickle(picklefile):
+    file = open(picklefile, 'r')
+    procdata = pickle.load(file)
+    return procdata
+########################################################################
 
