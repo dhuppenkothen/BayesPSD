@@ -1,10 +1,10 @@
 
 import matplotlib.pyplot as plt
 
-
 import numpy as np
 import math
 
+import scipy
 import scipy.optimize
 from scipy.stats.mstats import mquantiles as quantiles
 import scipy.stats
@@ -18,84 +18,9 @@ except ImportError:
     print("Emcee and Acor not installed. Using Metropolis-Hastings algorithm for Markov Chain Monte Carlo simulations.")
     emcee_import = False
 
+import utils
 import powerspectrum
 
-
-
-def choice_hack(data, p=None, size=1):
-
-    """ Hack for Numpy Choice function.
-
-    Because old versions of numpy do not have the
-    numpy.random.choice function, I've defined a hack
-    below that can do the same thing.
-
-    Will be slow for large arrays!
-
-    Note that unlike numpy.random.choice, this function has no "replace"
-    option! This means that elements picked from data will *always* be
-    replaced, i.e. can be picked again!
-
-    Parameters
-    ----------
-
-    data : {list, array-like}
-        List to pick elements from
-
-    p : {list, None}, optional, default None
-        the weights for the elements in data.
-        Needs to be of the same shape as data.
-        If None, the weights will be 1./size(data)
-
-    size : int, optional, default 1
-        The number of samples to generate.
-
-
-    Returns
-    -------
-    choice_data : {object, list}
-        Either a single object of the same type as the elements
-        of the input data, drawn from that input data according to
-        the weights; or a list of objects with length equal to
-        the size parameter set above.
-
-    """
-
-    weights = p
-
-    ### if no weights are given, all choices have equal probability
-    if weights == None:
-        weights = [1.0/float(len(data)) for x in range(len(data))]
-
-    if not np.sum(weights) == 1.0:
-        if np.absolute(weights[0]) > 1.0e7 and sum(weights) == 0:
-            weights = [1.0/float(len(data)) for x in range(len(data))]
-        else:
-            raise Exception("Weights entered do not add up to 1! This must not happen!")
-
-
-    ### Compute edges of each bin
-    edges = []
-    etemp = 0.0
-    for x,y in zip(data, weights):
-       etemp = etemp + y
-       edges.append(etemp)
-
-    ### if the np.sum of all weights does not add up to 1, raise an Exception
-    if size == 1:
-        randno = np.random.rand()
-
-    ### Else make sure that size is an integer
-    ### and make a list of random numbers
-    try:
-        randno = [np.random.rand() for x in np.arange(size)]
-    except TypeError:
-        raise TypeError("size should be an integer!")
-
-    choice_index = np.array(edges).searchsorted(randno)
-    choice_data = np.array(data)[choice_index]
-
-    return choice_data
 
 
 ### See if cutting-edge numpy is installed so I can use choice
@@ -103,7 +28,7 @@ try:
     from numpy.random import choice
      ### if not, use hack
 except ImportError:
-    choice = choice_hack
+    choice = utils.choice_hack
 
 
 
@@ -832,7 +757,7 @@ class MetropolisHastings(object):
             nlags = 30
 
             p3 = plt.subplot(len(self.topt), 3, (i*3)+3)
-            acorr = gt.autocorr(ts,nlags=nlags, norm=True)
+            acorr = autocorr(ts,nlags=nlags, norm=True)
             p3 = plt.vlines(range(nlags), np.zeros(nlags), acorr, colors='black', linestyles='solid')
             plt.axis([0.0, nlags, 0.0, 1.0])
 
@@ -841,6 +766,7 @@ class MetropolisHastings(object):
 
 
 ##############################################################
+
 
 
 
