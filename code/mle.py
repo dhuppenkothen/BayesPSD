@@ -29,11 +29,14 @@ import scipy.signal
 import math
 import copy
 
-from statsmodels.tools.numdiff import approx_hess
+try:
+    from statsmodels.tools.numdiff import approx_hess
+    comp_hessian = True
+except ImportError:
+    comp_hessian = False
 
 
 ### own imports
-import generaltools as gt
 import posterior
 import powerspectrum
 
@@ -425,25 +428,31 @@ class MaxLikelihood(object):
             if self.fitmethod == scipy.optimize.fmin_bfgs:
                 print("Approximating covariance from BFGS: ")
                 covar = aopt[3]
+                stderr = np.sqrt(np.diag(covar))
 
             else:
                 ### calculate Hessian approximating with finite differences
                 print("Approximating Hessian with finite differences ...")
-                phess = approx_hess(aopt[0], optfunc, neg=args)
+                if comp_hessian:
+                    phess = approx_hess(aopt[0], optfunc, neg=args)
 
-                covar = np.linalg.pinv(phess)
-                ### covariance is the inverse of the Hessian
-                print "Hessian (empirical): " + str(phess)
+                    ### covariance is the inverse of the Hessian
+                    print "Hessian (empirical): " + str(phess)
 
-                covar = np.linalg.inv(phess)
+                    covar = np.linalg.inv(phess)
+                    stderr = np.sqrt(np.diag(covar))
 
-            print "Covariance (empirical): " + str(covar)
+                else:
+                    print("Cannot compute hessian! Use BFGS or install statsmodels!")
+                    covar = None
+                    stderr = None
+
+            print("Covariance (empirical): " + str(covar))
 
             fitparams['cov'] = covar
 
             ### errors of parameters are on the diagonal of the covariance
             ### matrix; take square root to get standard deviation
-            stderr = np.sqrt(np.diag(covar))
             fitparams['err'] = stderr
 
             ### Print results to screen
