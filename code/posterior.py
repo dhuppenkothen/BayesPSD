@@ -223,10 +223,10 @@ class PerPosterior(Posterior):
 
         res = np.sum(np.log(funcval))+ np.sum(self.ps.ps/funcval)
         if np.isnan(res):
-            print("res is nan")
+            #print("res is nan")
             res = -logmin
         elif res == np.inf or np.isfinite(res) == False:
-            print("res is infinite!")
+            #print("res is infinite!")
             res = -logmin
 
         return res

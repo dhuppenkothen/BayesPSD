@@ -123,14 +123,13 @@ class MaxLikelihood(object):
 
     ### func = function to be fitted
     ### ain = list with set of initial parameters
-    ### bounds = bounds on parameter ranges (for constrained optimization
     ### obs = if True, compute covariance and print summary to screen
     ### noise = if True, the last parameter in ain is noise and will be renormalized
     ### residuals = put list of residuals here if they should be fit rather than self.y
 
-    def mlest(self, func, ain, bounds = None, obs=True, neg=True, functype='posterior'):
+    def mlest(self, func, ain, obs=True, noise=None, neg=True, functype='posterior'):
 
-        fitparams = self._fitting(func, ain, bounds, obs=True)
+        fitparams = self._fitting(func, ain, obs=True)
 
         if functype in ['p', 'post', 'posterior']:
             fitparams['deviance'] = 2.0*func.loglikelihood(fitparams['popt'], neg=True)
@@ -147,11 +146,10 @@ class MaxLikelihood(object):
     ### Fitting Routine
     ### optfunc: function to be minimized
     ### ain: initial parameter set
-    ### bounds: bounds for constrained optimization
     ### optfuncprime: analytic derivative of optfunc (if required)
     ### neg: bool keyword for MAP estimation (if done):
     ###      if True: compute the negative of the posterior
-    def _fitting(self, optfunc, ain, bounds, optfuncprime=None, neg = True, obs=True): 
+    def _fitting(self, optfunc, ain, optfuncprime=None, neg = True, obs=True):
 
         lenpower = float(len(self.y))
 
@@ -269,13 +267,11 @@ class MaxLikelihood(object):
     ### ain1: list of input parameters for model 1
     ### mod2: model 2 (more complex model)
     ### ain2: list of input parameters for model 2
-    ### bounds1: bounds for model 1 (constrained optimization)
-    ### bounds2: bounds for model 2 (constrained optimization)
-    def compute_lrt(self, mod1, ain1, mod2, ain2, bounds1=None, bounds2=None, noise1 = -1, noise2 = -1):
+    def compute_lrt(self, mod1, ain1, mod2, ain2, noise1 = -1, noise2 = -1, nmax=1):
 
         ### fit data with both models
-        par1 = self.mlest(mod1, ain1, bounds=bounds1, obs=self.obs, noise=noise1, nmax=nmax)
-        par2 = self.mlest(mod2, ain2, bounds=bounds2, obs=self.obs, noise=noise2, nmax=nmax)
+        par1 = self.mlest(mod1, ain1, obs=self.obs, noise=noise1, nmax=nmax)
+        par2 = self.mlest(mod2, ain2, obs=self.obs, noise=noise2, nmax=nmax)
 
         ### extract dictionaries with parameters for each
         varname1 = str(mod1).split()[1] + 'fit'
@@ -337,7 +333,7 @@ class MaxLikelihood(object):
             ain = [gamma_min, norm, 0.0]
             
             ### fit QPO to data 
-            #pars = self.mlest(func, ain, bounds=[[gamma_min, gamma_max], [None, None], [None, None]], noise = True, obs=False, residuals=None)
+            #pars = self.mlest(func, ain, noise = True, obs=False, residuals=None)
             pars = self.mlest(func, ain, noise = -1, obs=False, residuals=residuals)
 
             ### save fitted frequency and data residuals in parameter dictionary
@@ -356,7 +352,6 @@ class MaxLikelihood(object):
     ### plotname = string used in filename if plot == True
     ### obs = if True, compute covariances and print out stuff
     def find_qpo(self, func, ain,
-                 bounds=None,
                  fitmethod='nlm',
                  plot=False,
                  plotname=None,
@@ -401,12 +396,12 @@ class MaxLikelihood(object):
         inpars.extend(lrts[minind-3]['popt'][:2])
         inpars.extend([minfreq])
 
-        qpobounds = [[None, None] for x in range(len(inpars)-3)]
-        qpobounds.extend([[gamma_min, gamma_max], [None, None], [None,None]]) 
+        #qpobounds = [[None, None] for x in range(len(inpars)-3)]
+        #qpobounds.extend([[gamma_min, gamma_max], [None, None], [None,None]])
 
 
         ### fit broadband QPO + noise model, using best-fit parameters as input
-        qpopars = self.mlest(combmod, inpars, bounds=qpobounds, obs=obs, noise=noiseind, smooth=0)
+        qpopars = self.mlest(combmod, inpars,obs=obs, noise=noiseind, smooth=0)
 
         ### likelihood ratio of func+QPO to func
         lrt = optpars['deviance'] - qpopars['deviance']
@@ -606,7 +601,7 @@ class PerMaxLike(MaxLikelihood):
         self._set_fitmethod(fitmethod)
 
 
-    def mlest(self, func, ain, bounds = None, obs=True, noise=None, nmax=1, residuals = None, smooth=0, m=1, map=True):
+    def mlest(self, func, ain, obs=True, noise=None, nmax=1, residuals = None, smooth=0, m=1, map=True):
 
         if smooth == 0 :
             power = self.y
@@ -661,7 +656,7 @@ class PerMaxLike(MaxLikelihood):
         else:
             lpost = lposterior
 
-        fitparams = self._fitting(lpost, ain, bounds, neg = True, obs=obs)
+        fitparams = self._fitting(lpost, ain, neg = True, obs=obs)
 
         fitparams["model"] = str(func).split()[1]
         fitparams["mfit"] = func(self.x, *fitparams['popt']) 
@@ -806,12 +801,12 @@ class PerMaxLike(MaxLikelihood):
         return fitparams
 
 
-    def compute_lrt(self, mod1, ain1, mod2, ain2, bounds1=None, bounds2=None, noise1=-1, noise2=-1, m=1, map=True, nmax=1):
+    def compute_lrt(self, mod1, ain1, mod2, ain2, noise1=-1, noise2=-1, m=1, map=True, nmax=1):
 
 
         ### fit data with both models
-        par1 = self.mlest(mod1, ain1, bounds=bounds1, obs=self.obs, noise=noise1, m = m, map = map, nmax=nmax)
-        par2 = self.mlest(mod2, ain2, bounds=bounds2, obs=self.obs, noise=noise2, m = m, map = map, nmax=nmax)
+        par1 = self.mlest(mod1, ain1, obs=self.obs, noise=noise1, m = m, map = map, nmax=nmax)
+        par2 = self.mlest(mod2, ain2, obs=self.obs, noise=noise2, m = m, map = map, nmax=nmax)
 
         ### extract dictionaries with parameters for each
         varname1 = str(mod1).split()[1] + 'fit'

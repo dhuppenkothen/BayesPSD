@@ -8,4 +8,4 @@ from code.mcmc import MarkovChainMonteCarlo,MetropolisHastings
 from code.burst import Burst,GBMBurst
 from code.mle import *
 from code.utils import *
-
+from code.parametricmodels import *
