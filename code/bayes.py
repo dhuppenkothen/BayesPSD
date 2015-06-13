@@ -23,12 +23,12 @@ import numpy as np
 
 
 ### OWN SCRIPTS
-import utils
-import powerspectrum
-import mcmc
+from . import utils
+from . import powerspectrum
+from . import mcmc
 
-import mle
-import posterior
+from . import mle
+from . import posterior
 
 
 

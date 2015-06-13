@@ -1,7 +1,7 @@
 import numpy as np
-import mle
 import scipy.misc
-
+ 
+from . import mle
 
 logmin = -10000000000000000.0
 

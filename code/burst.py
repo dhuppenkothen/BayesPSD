@@ -1,12 +1,12 @@
 import numpy as np
 import cPickle as pickle
 
-import utils
-import lightcurve
-import powerspectrum
-import mle
-import bayes
-import mcmc
+from . import utils
+from . import lightcurve
+from . import powerspectrum
+from . import mle
+from . import bayes
+from . import mcmc
 
 
 #### CLASS BURST ####################

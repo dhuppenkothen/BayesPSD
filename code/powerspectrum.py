@@ -2,7 +2,8 @@ import numpy as np
 import math
 import scipy
 import scipy.optimize
-import lightcurve
+
+from . import lightcurve
 
 
 def add_ps(psall, method='avg'):

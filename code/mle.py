@@ -37,8 +37,8 @@ except ImportError:
 
 
 ### own imports
-import posterior
-import powerspectrum
+from . import posterior
+from . import powerspectrum
 
 ### global variables ####
 logmin = -100.0
