@@ -1,7 +1,8 @@
 import numpy as np
 import scipy.misc
  
-from . import mle
+from .parametricmodels import pl, bpl, qpo, const
+
 
 logmin = -10000000000000000.0
 
@@ -124,7 +125,7 @@ class PerPosterior(Posterior):
         gamma = t0[5]
 
         gamma_min = np.log(self.ps.df)
-        gamma_max = np.log(nu0/2.0)
+        gamma_max = np.log(self.ps.freq[-1]/2.0)
 
         pgamma = (gamma >= gamma_min and gamma <= gamma_max)
 
@@ -188,13 +189,11 @@ class PerPosterior(Posterior):
     ### useful so that we can compute -log_posterior
     def logprior(self, t0):
 
-        if self.func == mle.pl:
+        if self.func == pl:
            mlp = self.pl_prior(t0)
-        elif self.func == mle.bpl:
+        elif self.func == bpl:
            mlp = self.bpl_prior(t0)
-        elif self.func == mle.bpl2:
-           mlp = self.bpl_prior(t0)
-        elif self.func == mle.qpo or self.func.func_name == "lorentz":
+        elif self.func == qpo or self.func.func_name == "lorentz":
            mlp = self.qpo_prior(t0)
         elif self.func.func_name == "combmod":
            mlp = self.combmod_prior(t0)
@@ -204,7 +203,7 @@ class PerPosterior(Posterior):
            mlp = self.plqpo_prior(t0)
         elif self.func.func_name == "bplqpo":
            mlp = self.bplqpo_prior(t0)
-        elif self.func == mle.const:
+        elif self.func == const:
            mlp = self.const_prior(t0)
 
         else:
@@ -247,7 +246,8 @@ class StackPerPosterior(PerPosterior, object):
 
 #        res = np.sum(np.log(funcval))+ np.sum(self.ps.ps/funcval)
 
-        res = 2.0*self.m*(np.sum(np.log(funcval))+ np.sum(self.ps.ps/funcval) + np.sum((2.0/float(2*self.m) - 1.0)*np.log(self.ps.ps)))
+        res = 2.0*self.m*(np.sum(np.log(funcval))+ np.sum(self.ps.ps/funcval) +
+                          np.sum((2.0/float(2*self.m) - 1.0)*np.log(self.ps.ps)))
 #        print('res: ' + str(res))
 #        print("type res: " + str(type(res)))
         if np.isnan(res):
