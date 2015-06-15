@@ -4,10 +4,9 @@ import cPickle as pickle
 from . import utils
 from . import lightcurve
 from . import powerspectrum
-from . import mle
 from . import bayes
 from . import mcmc
-
+from .parametricmodels import pl, bpl
 
 #### CLASS BURST ####################
 #
@@ -16,7 +15,7 @@ from . import mcmc
 # a subclass of utils.Data
 #
 #
-class Burst(utils.Data,object):
+class Burst(object):
 
     def __init__(self, bstart, blength, 
                  energies=None, 
@@ -57,7 +56,8 @@ class Burst(utils.Data,object):
             self.photons = photons
  
         else:
-            raise Exception("Data missing! You must specify either a photon object or a file name from which to read the data!")
+            raise Exception("Data missing! You must specify either a photon "
+                            "object or a file name from which to read the data!")
 
 
         if not events is None:
@@ -129,7 +129,10 @@ class Burst(utils.Data,object):
     def bayesian_analysis(self, namestr='test', nchain=500, niter=100, nsim=1000, m=1, fitmethod='bfgs'):
 
         btest = bayes.Bayes(self.ps, namestr=namestr, m=m)
-        psfit, fakeper, self.model_summary = btest.choose_noise_model(mle.pl, [2,3,0.5], mle.bpl, [1,3,2,3,0.5], nchain=nchain, niter=niter, nsim=nsim, fitmethod=fitmethod)
+        psfit, fakeper, self.model_summary = btest.choose_noise_model(pl, [2,3,0.5],
+                                                                      bpl, [1,3,2,3,0.5],
+                                                                      nchain=nchain, niter=niter, nsim=nsim,
+                                                                      fitmethod=fitmethod)
 
         if not psfit:
             print("Analysis of burst " + str(namestr) + " failed. Returning ...")
@@ -138,10 +141,10 @@ class Burst(utils.Data,object):
         else:
             if self.model_summary["p_lrt"][0] < 0.05:
                 print("Model not adequately fit by a power law! Using broken power law instead!")
-                self.model = mle.bpl
+                self.model = bpl
                 self.psfit = getattr(psfit, str(self.model).split()[1]+"fit")
             else:
-                self.model = mle.pl
+                self.model = pl
                 self.psfit = getattr(psfit, str(self.model).split()[1]+"fit")
 
 
@@ -182,8 +185,7 @@ class Burst(utils.Data,object):
 # and GBM specific issues
 #
 #
-class GBMBurst(Burst, object):
-
+class GBMBurst(Burst):
 
     def __init__(self, bid, bstart, blength,
                  energies=None,
@@ -201,21 +203,15 @@ class GBMBurst(Burst, object):
         self.bid = bid
 
         ### if photons and filename aren't given, then data comes from procdata file
-        if photons ==None and not filename:
+        if photons is None and filename is None:
            filename = "tte_bn" + str(bid) + "_procdata.dat"
-       
-        Burst.__init__(self, bstart, blength,
-                 energies,
-                 photons,
-                 events,
-                 filename,
-                 instrument,
-                 fnyquist,
-                 norm,
-                 fluence = fluence,
-                 epeak = epeak,
-                 ttrig = ttrig)
-        
+
+
+        super(self.__class__, self).__init__(bstart, blength, energies,
+                                       photons, events, filename,
+                                       instrument, fnyquist, norm,
+                                       fluence, epeak, ttrig)
+
         return
 
 

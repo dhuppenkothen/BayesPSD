@@ -235,7 +235,7 @@ class Bayes(object):
 
 
         ### Step 3: create fake periodograms out of MCMCs
-        fakeper = mcobs.simulate_periodogram(func1, nsim = nsim)
+        fakeper = mcobs.simulate_periodogram(nsim = nsim)
 
         ### empty lists for simulated quantities of interest:
         sim_lrt, sim_deviance, sim_ksp, sim_maxpow, sim_merit, sim_fpeak, sim_y0, sim_srat = [], [], [], [], [], [], [], []
@@ -451,7 +451,7 @@ class Bayes(object):
 
 
         ### Step 3: create fake periodograms out of MCMCs
-        fakeper = mcobs.simulate_periodogram(func, nsim = nsim)
+        fakeper = mcobs.simulate_periodogram(nsim = nsim)
 
         sim_pars_all, sim_deviance, sim_ksp, sim_fpeak, sim_srat, \
         sim_maxpow, sim_merit, sim_y0, sim_s3max, sim_s5max, sim_s11max =[], [], [], [], [], [], [], [], [], [], []
@@ -631,21 +631,21 @@ class Bayes(object):
         resfile("Bayesian p-value for the np.sum of residuals: " + str(p_srat) + " +/- " + str(psrat_err))
 
         if self.plot:
-            subplot(2,2,1)
+            plt.subplot(2,2,1)
             n, bins, patches = plt.hist(sim_maxpow, bins=100, normed = True, color="cyan",  histtype='stepfilled')
             xmin, xmax = min(min(bins), fitpars['maxpow'])/1.2, max(25, fitpars['maxpow']*1.2)
             plt.axis([xmin, xmax, 0.0, max(n)])
             plt.vlines(fitpars['maxpow'], 0.0, max(n), lw=2, color='navy')
             plt.title('unsmoothed data', fontsize=12)
  
-            subplot(2,2,2)
+            plt.subplot(2,2,2)
             n, bins, patches = plt.hist(sim_s3max, bins=100, normed = True, color="cyan", histtype='stepfilled')
             xmin, xmax = min(min(bins), fitpars['s3max'])/1.2, max(25, fitpars['s3max']*1.2)
             plt.axis([xmin, xmax, 0.0, max(n)])
             plt.vlines(fitpars['s3max'], 0.0, max(n), lw=2, color='navy')
             plt.title('smoothed (3) data', fontsize=12)
 
-            subplot(2,2,3)
+            plt.subplot(2,2,3)
             n, bins, patches = plt.hist(sim_s3max, bins=100, normed = True, color="cyan", histtype='stepfilled')
             xmin, xmax = min(min(bins), fitpars['s5max'])/1.2, max(25, fitpars['s5max']*1.2)
             plt.axis([xmin, xmax, 0.0, max(n)])
@@ -653,7 +653,7 @@ class Bayes(object):
             plt.vlines(fitpars['s5max'], 0.0, max(n), lw=2, color='navy')
             plt.title('smoothed (5) data/model outlier', fontsize=12)
 
-            subplot(2,2,4)
+            plt.subplot(2,2,4)
             n, bins, patches = plt.hist(sim_s3max, bins=100, normed = True, color="cyan",  histtype='stepfilled')
             xmin, xmax = min(min(bins), fitpars['s11max'])/1.2, max(25, fitpars['s3max']*1.2)
             plt.axis([xmin, xmax, 0.0, max(n)])
@@ -662,6 +662,8 @@ class Bayes(object):
             plt.title('smoothed (11) data', fontsize=12)
 
             plt.savefig(self.namestr + '_maxpow.png', format='png')
+            plt.close()
+
 
         results = {"fitpars":fitpars, 'bindict':bindict, 'maxpows_all':maxpows_all, 'mcobs':mcobs, 'p_maxpow':[sim_maxpow, p_maxpow, pmaxpow_err], 'maxpow_ul':maxpow_ul, 'p_s3max':[sim_s3max, p_s3max, ps3max_err], 'p_s5max':[sim_s5max, p_s5max, ps5max_err], 'p_s11max':[sim_s11max, p_s11max, ps11max_err], 'p_merit':[p_merit, pmerit_err], 'p_srat':[p_srat, psrat_err], 'p_deviance':[p_deviance, pdeviance_err], 'fitpars':fitpars,  "postmean":mcobs.mean, "posterr":mcobs.std, "postquantiles":mcobs.ci, "rhat":mcobs.rhat, "acor":mcobs.acor, "acceptance":mcobs.acceptance}
 
@@ -789,7 +791,7 @@ class Bayes(object):
 
 
         ### simulate lots of realizations of the broadband noise model from MCMCs
-        funcfake = mcobs.simulate_periodogram(func, nsim = nsim)
+        funcfake = mcobs.simulate_periodogram(nsim = nsim)
 
         ### empty lists to store simulated LRTS and parameters in
         sim_lrt, sim_optpars, sim_qpopars, sim_deviance, sim_ksp, sim_merit, sim_srat = [], [], [], [], [], [], []
