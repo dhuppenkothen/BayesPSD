@@ -212,15 +212,14 @@ class GBMBurst(Burst):
         if photons is None and filename is None:
            filename = "tte_bn" + str(bid) + "_procdata.dat"
 
-
-        #Burst.__init__(self, bstart, blength, energies,
-        #           photons, events, filename,
-        #           instrument, fnyquist, norm,
-        #           fluence, epeak, ttrig, addfrac)
-        super(self.__class__, self).__init__(bstart, blength, energies,
-                                       photons, events, filename,
-                                       instrument, fnyquist, norm,
-                                       fluence, epeak, ttrig, addfrac)
+        Burst.__init__(self, bstart, blength, energies,
+                   photons, events, filename,
+                   instrument, fnyquist, norm,
+                   fluence, epeak, ttrig, addfrac)
+        #super(self.__class__, self).__init__(bstart, blength, energies,
+        #                               photons, events, filename,
+        #                               instrument, fnyquist, norm,
+        #                               fluence, epeak, ttrig, addfrac)
 
         return
 
