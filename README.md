@@ -35,7 +35,7 @@ Installation
 You can either
 * start with the Demo notebook in ./docs/ 
 * run the code on multiple bursts using ./code/run_bursts.py  
-* Use any of the other code in the repo for your purposes.
+* use any of the other code in the repo for your purposes.
 
 
 

@@ -180,7 +180,7 @@ class MaxLikelihood(object):
                 if warnflag == 1 :
                     print("*** ACHTUNG! Maximum number of iterations exceeded! ***")
                 elif warnflag == 2:
-                    print("Gradient and/or function calls not changing!")
+                    #print("Gradient and/or function calls not changing!")
 
 
             ## all other methods: Simplex, Powell, Gradient

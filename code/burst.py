@@ -202,7 +202,8 @@ class GBMBurst(Burst):
                  norm='leahy',
                  fluence = None,
                  epeak = None,
-                 ttrig = None):
+                 ttrig = None,
+                 addfrac = 0.2):
 
         ### set burst ID
         self.bid = bid
@@ -215,7 +216,7 @@ class GBMBurst(Burst):
         super(self.__class__, self).__init__(bstart, blength, energies,
                                        photons, events, filename,
                                        instrument, fnyquist, norm,
-                                       fluence, epeak, ttrig)
+                                       fluence, epeak, ttrig, addfrac)
 
         return
 
