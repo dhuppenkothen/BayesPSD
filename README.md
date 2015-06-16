@@ -27,7 +27,8 @@ Installation
  
     /my/directory/$> git clone https://github.com/dhuppenkothen/BayesPSD.git
  
-2. add /my/directory/ to your $PYTHONPATH variably; this depends on your 
+2. add /my/directory/ to your $PYTHONPATH variablym either in .profile or .bashrc; 
+   this depends on your system! 
  
 3. Congratulations, you should now be able to use the code in the repository.
 
