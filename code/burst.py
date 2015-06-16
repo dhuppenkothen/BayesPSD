@@ -27,7 +27,8 @@ class Burst(object):
                  norm='leahy',
                  fluence = None,
                  epeak = None,
-                 ttrig = None ):
+                 ttrig = None,
+                 addfrac = 0.2):
 
         ### which instrument was used to record this data
         ### note: this makes a difference in terms of file formats
@@ -35,13 +36,17 @@ class Burst(object):
         self.instrument = instrument
 
         if ":" in str(bstart):
-            self.bst = self.convert_time(bstart) - 0.2*blength
+            self.bst = self.convert_time(bstart)
         else:
-            self.bst = bstart - 0.2*blength
+            self.bst = bstart
+
+        self.blen = blength + 2.*addfrac*blength
+
+        start = self.bst - addfrac*blength
+        length = (1. + 2.*addfrac)*self.blen
+        end = start + length
 
         ### assume burst length is in seconds
-        self.blen = blength + 0.4*blength
-        self.bend = self.bst + 1.2*blength
         self.fluence = fluence
         self.epeak = epeak
         self.ttrig = ttrig
@@ -62,8 +67,8 @@ class Burst(object):
 
         if not events is None:
             self.energies = events
-        startind = photons.searchsorted(self.bst)
-        endind = photons.searchsorted(self.bend)
+        startind = photons.searchsorted(start)
+        endind = photons.searchsorted(end)
         self.photons = self.photons[startind:endind]
         self.energies = self.energies[startind:endind]
 
@@ -80,13 +85,13 @@ class Burst(object):
 
         ### make a light curve
         self.time = self.photons
-        print("length time: " + str(len(self.time)))
-        print("tseg: " + str(self.time[-1] - self.time[0]))
+        #print("length time: " + str(len(self.time)))
+        #print("tseg: " + str(self.time[-1] - self.time[0]))
  
         #self.time = np.array([s.time for s in self.photons])
         self.lc = lightcurve.Lightcurve(self.time, timestep=0.5/fnyquist, tseg=self.blen, tstart=self.bst)
 
-        print("length lc: " + str(len(self.lc.time)))
+        #print("length lc: " + str(len(self.lc.time)))
 
         ### make a periodogram
         self.ps = powerspectrum.PowerSpectrum(self.lc, norm=norm)

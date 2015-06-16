@@ -242,28 +242,30 @@ class Bayes(object):
 
         ### Step 4: Fit fake periodograms and read out parameters of interest from each fit:
         for i,x in enumerate(fakeper):
-            fitfake = mle.PerMaxLike(x, fitmethod=fitmethod, obs=False)
-            try: 
+            try:
+                fitfake = mle.PerMaxLike(x, fitmethod=fitmethod, obs=False)
+
                 lrt = fitfake.compute_lrt(func1, par1, func2, par2, noise1=noise1, noise2=noise2, m=self.m)
 
-            except:
-                resfile('Fitting of fake periodogram ' + str(i) + ' failed! Returning ...')
-#                return psfit, fakeper, mcobs
-                continue
-            sim_pars1 = getattr(fitfake, func1name+'fit')
-            sim_pars2 = getattr(fitfake, func2name+'fit')
-            #if lrt > 20:
-            #    fitfake.plotfits(sim_pars1, sim_pars2, namestr=self.namestr+'_'+str(i))
 
-            sim_lrt.append(lrt)
-            sim_deviance.append(sim_pars1['deviance'])
-            sim_ksp.append(sim_pars1['ksp'])
-            sim_maxpow.append(sim_pars1['maxpow'])
-            sim_merit.append(sim_pars1['merit'])
-            sim_fpeak.append(sim_pars1['maxfreq'])
-            sim_y0.append(sim_pars1['mfit'][sim_pars1['maxind']])
-            sim_srat.append(sim_pars1['sobs'])
+                #resfile('Fitting of fake periodogram ' + str(i) + ' failed! Returning ...')
+    #                return psfit, fakeper, mcobs
 
+                sim_pars1 = getattr(fitfake, func1name+'fit')
+                sim_pars2 = getattr(fitfake, func2name+'fit')
+                #if lrt > 20:
+                #    fitfake.plotfits(sim_pars1, sim_pars2, namestr=self.namestr+'_'+str(i))
+
+                sim_lrt.append(lrt)
+                sim_deviance.append(sim_pars1['deviance'])
+                sim_ksp.append(sim_pars1['ksp'])
+                sim_maxpow.append(sim_pars1['maxpow'])
+                sim_merit.append(sim_pars1['merit'])
+                sim_fpeak.append(sim_pars1['maxfreq'])
+                sim_y0.append(sim_pars1['mfit'][sim_pars1['maxind']])
+                sim_srat.append(sim_pars1['sobs'])
+            except KeyboardInterrupt:
+                break
 
         if len(sim_maxpow) == 0:
             resfile("Analysis of Burst failed! Returning ...")
@@ -488,7 +490,10 @@ class Bayes(object):
                 sim_s3max.append(sim_pars['s3max'])
                 sim_s5max.append(sim_pars['s5max'])
                 sim_s11max.append(sim_pars['s11max'])
-        
+
+            except KeyboardInterrupt:
+                break
+
             except:
                 print("Simulation failed! Continuing ...")
                 continue 
@@ -800,18 +805,21 @@ class Bayes(object):
 
         ### run QPO search on each and return likelihood ratios parameters for each
         for x in funcfake:
-            simno = simno + 1
-            sim_psfit = mle.PerMaxLike(x, fitmethod='constbfgs',obs=False)
-            slrt, soptpars, sqpopars = sim_psfit.find_qpo(func, ain, obs=False, plot=True, plotname = plotstr + '_sim' + str(simno) + '_qposearch')
+            try:
+                simno = simno + 1
+                sim_psfit = mle.PerMaxLike(x, fitmethod='constbfgs',obs=False)
+                slrt, soptpars, sqpopars = sim_psfit.find_qpo(func, ain, obs=False, plot=True,
+                                                              plotname = plotstr + '_sim' + str(simno) + '_qposearch')
 
-            sim_lrt.append(slrt)
-            sim_optpars.append(soptpars)
-            sim_qpopars.append(sqpopars)
-            sim_deviance.append(soptpars['deviance'])
-            sim_ksp.append(soptpars['ksp'])
-            sim_merit.append(soptpars['merit'])
-            sim_srat.append(soptpars['sobs'])
-
+                sim_lrt.append(slrt)
+                sim_optpars.append(soptpars)
+                sim_qpopars.append(sqpopars)
+                sim_deviance.append(soptpars['deviance'])
+                sim_ksp.append(soptpars['ksp'])
+                sim_merit.append(soptpars['merit'])
+                sim_srat.append(soptpars['sobs'])
+            except KeyboardInterrupt:
+                break
 
         ### Step 5: Compute Bayesian posterior probabilities of individual quantities
         p_deviance = float(len([x for x in sim_deviance if x > optpars['deviance']]))/float(len(sim_deviance))
