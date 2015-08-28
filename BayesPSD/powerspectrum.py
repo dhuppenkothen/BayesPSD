@@ -89,6 +89,44 @@ class PowerSpectrum(lightcurve.Lightcurve):
         newps.n = 2*len(binps)
         return newps
 
+
+    def rebin_log(self, f=0.01):
+        """
+        Logarithmic rebin of the periodogram.
+        The new frequency depends on the previous frequency
+        modified by a factor f:
+
+        dnu_j = dnu_{j-1}*(1+f)
+
+        Parameters:
+        -----------
+        f: float, optional, default 0.01
+            parameter that steers the frequency resolution
+
+
+        Returns:
+            binfreq: numpy.ndarray
+                the binned frequencies
+            binps: numpy.ndarray
+                the binned powers
+        """
+
+        minfreq = self.freq[1]*0.5
+        maxfreq = self.freq[-1]
+        binfreq = [minfreq]
+        df = self.freq[1]
+        while binfreq[-1] <= maxfreq:
+            binfreq.append(binfreq[-1] + df*(1.+f))
+            df = binfreq[-1]-binfreq[-2]
+        binps, bin_edges, binno = scipy.stats.binned_statistic(self.freq, self.ps, statistic="mean", bins=binfreq)
+
+        nsamples = np.array([len(binno[np.where(binno == i)[0]]) for i in xrange(np.max(binno))])
+        df = np.diff(binfreq)
+        binfreq = binfreq[:-1]+df/2.
+        return binfreq, binps, nsamples
+
+
+
     def findmaxpower(self):
         psfiltered = filter(lambda x: x >= 100.0, self.ps)
         maxpow = max(psfiltered)
