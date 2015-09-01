@@ -17,7 +17,6 @@
 
 #!/usr/bin/env python
 
-
 import matplotlib.pyplot as plt
 
 #### GENERAL IMPORTS ###
@@ -269,13 +268,14 @@ class MaxLikelihood(object):
     ### ain2: list of input parameters for model 2
     def compute_lrt(self, mod1, ain1, mod2, ain2, noise1 = -1, noise2 = -1, nmax=1):
 
+        print("I AM USING THIS CODE!")
         ### fit data with both models
         par1 = self.mlest(mod1, ain1, obs=self.obs, noise=noise1, nmax=nmax)
         par2 = self.mlest(mod2, ain2, obs=self.obs, noise=noise2, nmax=nmax)
 
         ### extract dictionaries with parameters for each
-        varname1 = str(mod1).split()[1] + 'fit'
-        varname2 = str(mod2).split()[1] + 'fit'
+        varname1 = "model1fit"
+        varname2 = "model2fit"
 
         self.__setattr__(varname1, par1)
         self.__setattr__(varname2, par2)
@@ -284,7 +284,7 @@ class MaxLikelihood(object):
         self.lrt = par1['deviance'] - par2['deviance']
 
         if self.obs == True: 
-            print("The Likelihood Ratio for models " + str(mod1).split()[1] + " and " + str(mod2).split()[1] + " is: LRT = " + str(self.lrt))
+            print("The Likelihood Ratio for models %s and %s is: LRT = %.4f"%(varname1, varname2, self.lrt))
 
         return self.lrt
 
@@ -809,8 +809,8 @@ class PerMaxLike(MaxLikelihood):
         par2 = self.mlest(mod2, ain2, obs=self.obs, noise=noise2, m = m, map = map, nmax=nmax)
 
         ### extract dictionaries with parameters for each
-        varname1 = str(mod1).split()[1] + 'fit'
-        varname2 = str(mod2).split()[1] + 'fit'
+        varname1 = "model1fit"
+        varname2 = "model2fit"
 
         self.__setattr__(varname1, par1)
         self.__setattr__(varname2, par2)
@@ -819,8 +819,10 @@ class PerMaxLike(MaxLikelihood):
         self.lrt = par1['deviance'] - par2['deviance']
 
         if self.obs == True:
-            print("The Likelihood Ratio for models " + str(mod1).split()[1] + " and " + str(mod2).split()[1] + " is: LRT = " + str(self.lrt))
+            print("The Likelihood Ratio for models %s and %s is: LRT = %.4f"%(varname1, varname2, self.lrt))
+
 
         return self.lrt
+
 
 
