@@ -47,6 +47,7 @@ class PowerSpectrum(lightcurve.Lightcurve):
             nphots = np.sum(lc.counts)
         else:
             nphots = nphot
+        
         nel = np.round(lc.tseg/lc.res)
 
         df = 1.0/lc.tseg

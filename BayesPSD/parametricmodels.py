@@ -38,16 +38,15 @@ def qpo(freq, a, b, c, d=None):
 
     gamma = np.exp(a)
     norm = np.exp(b)
-    nu0 = c
+    nu0 = np.exp(c)
 
     alpha = norm*gamma/(math.pi*2.0)
     y = alpha/((freq - nu0)**2.0 + gamma**2.0)
 
-    if d:
+    if d is not None:
         y = y + np.exp(d)
 
     return y
-
 
 
 ### auxiliary function that makes a Lorentzian with a fixed centroid frequency

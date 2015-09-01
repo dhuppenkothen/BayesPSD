@@ -196,8 +196,10 @@ class Bayes(object):
 
 
         ### make strings for function names from function definition
-        func1name = str(func1).split()[1] 
-        func2name = str(func2).split()[1]
+        func1name = "model1" 
+        func2name = "model2"
+
+	
 
         ### step 1: fit both models to observation and compute LRT
         psfit = mle.PerMaxLike(self.ps, fitmethod=fitmethod, obs=True)
@@ -206,6 +208,7 @@ class Bayes(object):
         ### get out best fit parameters and associated quantities
         fitpars1 = getattr(psfit, func1name+'fit')
         fitpars2 = getattr(psfit, func2name+'fit')
+
 
         if self.plot:
             ### plot the periodogram and best fit models

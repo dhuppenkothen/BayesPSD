@@ -16,10 +16,12 @@ import numpy as np
 import scipy.optimize
 
 
+dayseconds = 60.*60.*24.
 
 class Lightcurve(object):
-    def __init__(self, time, counts = None, timestep=1.0, tseg=None, verbose = False, tstart = None):
+    def __init__(self, time, counts = None, timestep=1.0, tseg=None, verbose = False, tstart = None, format="seconds"):
 
+        self.format = format # time format
         if counts is None:
             if verbose == True:
                 print "You put in time of arrivals."
@@ -34,7 +36,11 @@ class Lightcurve(object):
             self.time = np.array(time)
             self.counts = np.array(counts)
             self.res = time[1] - time[0]
-            self.countrate = [t/self.res for t in self.counts]
+            if self.format == "seconds":
+                self.countrate = self.counts/self.res
+            else:
+                print("I am here!")
+                self.countrate = self.counts/(self.res*dayseconds)
             self.tseg = self.time[-1] - self.time[0] + self.res
 
     def makeLightcurve(self, timestep, tseg=None, verbose=False):
@@ -91,7 +97,10 @@ class Lightcurve(object):
                 print "You specified the time resolution as: " + str(timestep)+ "."
                 print "The actual time resolution of the light curve is: " + str(self.res) +"."
 
-            self.countrate = self.counts/self.res
+            if self.format == "seconds":
+                self.countrate = self.counts/self.res
+            else:
+                self.countrate = self.counts/(self.res*dayseconds)
             self.time = np.array([histbins[0] + 0.5*self.res + n*self.res for n in range(int(timebin))])
             if frac > 0.0:
                 self.time = np.array(self.time[:-1])
@@ -267,3 +276,33 @@ class Lightcurve(object):
 
         return tnew, cbin, dtnew
 
+    def convert_seconds_to_mjd(self, mjdobs):
+        """
+        Convert time format of the light curve from seconds (MET or otherwise)
+        to MJD. 
+
+        Parameter:
+        ----------
+            mjdobs: the start time of the light curve in MJD format.
+
+        """
+        assert self.format == "seconds", "Time format of the light curve must be seconds to"\
+                                         "be able to convert to MJD"
+
+        self.time /= dayseconds
+        self.time += mjdobs
+        self.tseg /= dayseconds
+        self.res /= dayseconds
+        return
+
+
+    def convert_mjd_to_seconds(self):
+        """
+        Convert time format of the light curve from MJD to (MET) seconds.
+        """
+
+        self.time *= dayseconds
+        self.tseg *= dayseconds
+        self.res *= dayseconds
+
+        return
