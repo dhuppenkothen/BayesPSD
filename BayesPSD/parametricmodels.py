@@ -4,49 +4,148 @@
 import numpy as np
 import math
 
-def const(freq, a):
-    return np.array([np.exp(a) for x in freq])
+
+
+class ParametricModel(object):
+
+    def __init__(self, npar, name):
+        self.npar = npar
+        self.name = name
+
+    def __call__(self, freq, *pars):
+        return self.func(freq, *pars)
 
 
 
-#### POWER LAW ########
-#
-# f(x) = b*x**a + c
-# a = power law index
-# b = normalization (LOG)
-# c = white noise level (LOG), optional
-#
-def pl(freq, a, b, c=None):
-    res = -a*np.log(freq) + b
-    if c:
-        return (np.exp(res) + np.exp(c))
-    else:
+
+class Const(ParametricModel):
+
+    def __init__(self):
+        npar = 1
+        name = "const"
+        ParametricModel.__init__(self, npar, name)
+
+    def func(self, x, a):
+        return np.exp(np.ones(x.shape[0])*a)
+
+    def prior(self):
+        return
+
+
+
+class PowerLaw(ParametricModel):
+
+    def __init__(self):
+        npar = 2 ## number of parameters in the model
+        name = "powerlaw" ## model name
+        ParametricModel.__init__(self, npar, name)
+
+    def func(self, x, alpha, amplitude):
+        """
+        Power law model.
+
+        Parameters:
+        -----------
+        x: numpy.ndarray
+            The independent variable
+        alpha: float
+            The  power law index
+        amplitude: float
+            The *logarithm* of the normalization or amplitude of the power law
+
+        Returns:
+        --------
+        model: numpy.ndarray
+            The power law model for all values in x.
+        """
+        res = -alpha*np.log(x) + amplitude
         return np.exp(res)
 
 
+class BentPowerLaw(ParametricModel):
 
-#### Lorentzian Profile for QPOs
-#
-# f(x) = (a*b/(2*pi))/((x-c)**2 + a**2)
-#
-# a = full width half maximum
-# b = log(normalization)
-# c = centroid frequency
-# d = log(noise level) (optional)
-#
-def qpo(freq, a, b, c, d=None):
+    def __init__(self):
+        npar = 4
+        name = "bentpowerlaw"
+        ParametricModel.__init__(self, npar, name)
 
-    gamma = np.exp(a)
-    norm = np.exp(b)
-    nu0 = np.exp(c)
+    def func(self, x, alpha1, amplitude, alpha2, x_break):
+        """
+        A bent power law with a bending factor of 1.
 
-    alpha = norm*gamma/(math.pi*2.0)
-    y = alpha/((freq - nu0)**2.0 + gamma**2.0)
+        Parameters:
+        -----------
+        x: numpy.ndarray
+            The independent variable
+        alpha1: float
+            The  power law index at small x
+        amplitude: float
+            The normalization or amplitude of the bent power law
+        alpha2: float
+            The power law index at large x
+        x_break: float
+            The position in x where the break between alpha1 and alpha2 occurs
 
-    if d is not None:
-        y = y + np.exp(d)
+        """
+        ### compute bending factor
+        logz = (alpha2 - alpha1)*(np.log(x) - x_break)
 
-    return y
+        ### be careful with very large or very small values
+        logqsum = sum(np.where(logz<-100, 1.0, 0.0))
+        if logqsum > 0.0:
+            logq = np.where(logz<-100, 1.0, logz)
+        else:
+            logq = logz
+        logqsum = np.sum(np.where((-100<=logz) & (logz<=100.0), np.log(1.0 + np.exp(logz)), 0.0))
+        if logqsum > 0.0:
+            logqnew = np.where((-100<=logz) & (logz<=100.0), np.log(1.0 + np.exp(logz)), logq)
+        else:
+            logqnew = logq
+
+        logy = -alpha1*np.log(x) - logqnew + amplitude
+        return np.exp(logy)
+
+
+
+
+
+
+class QPO(ParametricModel):
+
+    def __init__(self):
+        npar = 3
+        name = "qpo"
+        ParametricModel.__init__(self, npar, name)
+
+    def func(self, x, gamma, amplitude, x0):
+        """
+        Lorentzian profile for fitting QPOs.
+
+        Parameters:
+        -----------
+        x: numpy.ndarray
+            The independent variable
+        gamma: float
+            The width of the Lorentzian profile
+        amplitude: float
+            The height or amplitude of the Lorentzian profile
+        x0: float
+            The position of the centroid of the Lorentzian profile
+        """
+        gamma = np.exp(gamma)
+        amplitude = np.exp(amplitude)
+
+        alpha = amplitude*gamma/(math.pi*2.0)
+        y = alpha/((x - x0)**2.0 + gamma**2.0)
+        return y
+
+
+
+
+
+
+
+"""
 
 
 ### auxiliary function that makes a Lorentzian with a fixed centroid frequency
@@ -79,42 +178,6 @@ def bplqpo(freq, lplind, beta, hplind, fbreak, noise, a, b, c, d=None):
     quasiper = qpo(freq, a, b, c, d)
     return powerlaw+quasiper
 
-
-###  BENT POWER LAW
-# f(x) = (a[1]*x**a[0])/(1.0 + (x/a[3])**(a[2]-a[0]))+a[4])
-# a = low-frequency index, usually between 0 and 1
-# b = log(normalization)
-# c = high-frequency index, usually between 1 and 4
-# d = log(frequency where model bends)
-# e = log(white noise level) (optional)
-# f = smoothness parameter
-
-#def bpl(freq, a, b, c, d, f=-1.0, e=None):
-def bpl(freq, a, b, c, d, e=None):
-
-    ### compute bending factor
-    logz = (c - a)*(np.log(freq) - d)
-
-    ### be careful with very large or very small values
-    logqsum = sum(np.where(logz<-100, 1.0, 0.0))
-    if logqsum > 0.0:
-        logq = np.where(logz<-100, 1.0, logz)
-    else:
-        logq = logz
-    logqsum = np.sum(np.where((-100<=logz) & (logz<=100.0), np.log(1.0 + np.exp(logz)), 0.0))
-    if logqsum > 0.0:
-        logqnew = np.where((-100<=logz) & (logz<=100.0), np.log(1.0 + np.exp(logz)), logq)
-    else:
-        logqnew = logq
-
-    logy = -a*np.log(freq) - logqnew + b
-
-#    logy = -a*np.log(freq) + f*logqnew + b
-    if e:
-        y = np.exp(logy) + np.exp(e)
-    else:
-        y = np.exp(logy)
-    return y
 
 
 
@@ -191,4 +254,4 @@ def combine_models(*funcs, **kwargs):
 
 
 
-
+"""
