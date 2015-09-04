@@ -4,13 +4,20 @@
 import numpy as np
 import math
 
+import scipy.stats
+
+
+logmin = -10000000000000000.0
 
 
 class ParametricModel(object):
 
-    def __init__(self, npar, name):
+    def __init__(self, npar, name, parnames=None):
         self.npar = npar
         self.name = name
+
+        if parnames is not None:
+            self.parnames = parnames
 
     def __call__(self, freq, *pars):
         return self.func(freq, *pars)
@@ -20,25 +27,103 @@ class ParametricModel(object):
 
 class Const(ParametricModel):
 
-    def __init__(self):
+    def __init__(self, hyperpars=None):
         npar = 1
         name = "const"
-        ParametricModel.__init__(self, npar, name)
+        parnames = ["amplitude"]
+
+        ParametricModel.__init__(self, npar, name, parnames)
+
+        if not hyperpars is None:
+            self.set_prior(hyperpars)
+
+
+    def set_prior(self, hyperpars):
+        """
+        Set a Gaussian prior for the constant model.
+
+        Parameters:
+        -----------
+        a_mean: float
+            Mean of the Gaussian distribution
+        a_var: float
+            Variance of the Gaussian distribution
+        """
+
+        a_mean = hyperpars["a_mean"]
+        a_var = hyperpars["a_var"]
+
+        def logprior(a):
+            pp = scipy.stats.norm.pdf(a, a_mean, a_var)
+            if pp == 0.0:
+                return logmin
+            else:
+                return np.log(pp)
+
+        self.logprior = logprior
+
 
     def func(self, x, a):
-        return np.exp(np.ones(x.shape[0])*a)
+        """
+        A constant model.
 
-    def prior(self):
-        return
+        Parameters:
+        ------------
+        x: numpy.ndarray
+            The independent variable
+        a: float
+            The amplitude of the constant model
+        """
+        return np.ones(x.shape[0])*a
+
 
 
 
 class PowerLaw(ParametricModel):
 
-    def __init__(self):
+    def __init__(self, hyperpars=None):
         npar = 2 ## number of parameters in the model
         name = "powerlaw" ## model name
-        ParametricModel.__init__(self, npar, name)
+        parnames = ["alpha", "amplitude"]
+        ParametricModel.__init__(self, npar, name, parnames)
+
+        if hyperpars is not None:
+            self.set_prior(hyperpars)
+
+
+    def set_prior(self, hyperpars):
+        """
+        Set the hyper parameters for the power law parameters.
+        The power law index alpha has a flat prior over the specified range,
+        the amplitude is defined such that the log-amplitude has a flat
+        prior over a given range, too, which translates to an exponential prior
+        beween the specified ranges.
+
+        Parameters:
+        -----------
+        alpha_min, alpha_max: float, float
+            The minimum and maximum values for the power-law index.
+        amplitude_min, amplitude_max: float, float
+            The minimum and maximum values for the log-amplitude
+        """
+
+        alpha_min = hyperpars["alpha_min"]
+        alpha_max = hyperpars["alpha_max"]
+        amplitude_min =  hyperpars["amplitude_min"]
+        amplitude_max =  hyperpars["amplitude_max"]
+
+        def logprior(alpha, amplitude):
+            p_alpha = (alpha >= alpha_min and alpha <= alpha_max)/(alpha_max-alpha_min)
+            p_amplitude = (amplitude >= amplitude_min and amplitude <= amplitude_max)/(amplitude_max-amplitude_min)
+            pp = p_alpha*p_amplitude
+
+            if pp == 0:
+                return logmin
+            else:
+                return np.log(pp)
+
+        self.logprior = logprior
+
 
     def func(self, x, alpha, amplitude):
         """
@@ -64,10 +149,41 @@ class PowerLaw(ParametricModel):
 
 class BentPowerLaw(ParametricModel):
 
-    def __init__(self):
+    def __init__(self, hyperpars=None):
         npar = 4
         name = "bentpowerlaw"
-        ParametricModel.__init__(self, npar, name)
+        parnames = ["alpha1", "amplitude", "alpha2", "x_break"]
+        ParametricModel.__init__(self, npar, name, parnames)
+
+        if hyperpars is not None:
+            self.set_prior(hyperpars)
+
+
+    def set_prior(self, hyperpars):
+
+        alpha1_min = hyperpars["alpha1_min"]
+        alpha1_max = hyperpars["alpha1_max"]
+        amplitude_min = hyperpars["amplitude_min"]
+        amplitude_max = hyperpars["amplitude_max"]
+        alpha2_min = hyperpars["alpha2_min"]
+        alpha2_max = hyperpars["alpha2_max"]
+        x_break_min = hyperpars["x_break_min"]
+        x_break_max = hyperpars["x_break_max"]
+
+        def logprior(alpha1, amplitude, alpha2, x_break):
+            p_alpha1 = (alpha1 >= alpha1_min and alpha1 <= alpha1_max)/(alpha1_max-alpha1_min)
+            p_amplitude = (amplitude >= amplitude_min and amplitude <= amplitude_max)/(amplitude_max-amplitude_min)
+            p_alpha2 = (alpha2 >= alpha2_min and alpha2 <= alpha2_max)/(alpha2_max-alpha2_min)
+            p_x_break = (x_break >= x_break_min and x_break <= x_break_max)/(x_break_max-x_break_min)
+
+            pp = p_alpha1 * p_amplitude * p_alpha2 * p_x_break
+            if pp == 0.0:
+                return logmin
+            else:
+                return np.log(pp)
+
+        self.logprior = logprior
+
 
     def func(self, x, alpha1, amplitude, alpha2, x_break):
         """
@@ -80,11 +196,11 @@ class BentPowerLaw(ParametricModel):
         alpha1: float
             The  power law index at small x
         amplitude: float
-            The normalization or amplitude of the bent power law
+            The log-normalization or log-amplitude of the bent power law
         alpha2: float
             The power law index at large x
         x_break: float
-            The position in x where the break between alpha1 and alpha2 occurs
+            The log-position in x where the break between alpha1 and alpha2 occurs
 
         """
         ### compute bending factor
@@ -112,10 +228,36 @@ class BentPowerLaw(ParametricModel):
 
 class QPO(ParametricModel):
 
-    def __init__(self):
+    def __init__(self, hyperpars=None):
         npar = 3
         name = "qpo"
-        ParametricModel.__init__(self, npar, name)
+        parnames = ["gamma", "A", "x0"]
+        ParametricModel.__init__(self, npar, name, parnames)
+        if hyperpars is not None:
+            self.set_prior(hyperpars)
+
+
+    def set_prior(self, hyperpars):
+        gamma_min = hyperpars["gamma_min"]
+        gamma_max = hyperpars["gamma_max"]
+        amplitude_min= hyperpars["amplitude_min"]
+        amplitude_max = hyperpars["amplitude_max"]
+        x0_min = hyperpars["x0_min"]
+        x0_max = hyperpars["x0_max"]
+
+        def logprior(gamma, amplitude, x0):
+            p_gamma = (gamma >= gamma_min and gamma <= gamma_max)/(gamma_max-gamma_min)
+            p_amplitude = (amplitude >= amplitude_min and amplitude <= amplitude_max)/(amplitude_max-amplitude_min)
+            p_x0 = (x0 >= x0_min and x0 <= x0_max)/(x0_max - x0_min)
+
+            pp = p_gamma*p_amplitude*p_x0
+            if pp == 0.0:
+                return logmin
+            else:
+                return np.log(pp)
+
+        self.logprior = logprior
+
 
     def func(self, x, gamma, amplitude, x0):
         """
@@ -141,6 +283,49 @@ class QPO(ParametricModel):
 
 
 
+class CombinedModel(object):
+
+    def __init__(self, models, hyperpars="None"):
+        ## initialize all models
+        self.models = [m(hyperpars) for m in models]
+
+        ## set the total number of parameters
+        self.npar = np.sum([m.npar for m in self.models])
+
+        ## set the name for the combined model
+        self.name = self.models[0].name
+        for m in self.models:
+            self.name += "+%s"%m.name
+
+        ## set hyperparameters
+        if hyperpars is not None:
+            for m in self.models:
+                self.set_prior(hyperpars)
+
+
+    def set_prior(self, hyperpars):
+
+        def logprior(*pars):
+            counter = 0
+            pp = 0.
+            for m in self.models:
+                m.set_prior(hyperpars)
+                pp += m.logprior(*pars[counter:counter+m.npar])
+                counter += m.npar
+
+            return pp
+
+        self.logprior = logprior
+
+
+
+    def func(self, x, *pars):
+        model = np.zeros(x.shape[0])
+        counter = 0
+        for m in self.models:
+            model += m.func(pars[counter:counter+m.npar])
+            counter += m.npar
+        return model
 
 
 
