@@ -15,23 +15,6 @@ logmin = parametricmodels.logmin
 
 
 
-def test_bpl():
-    x = np.arange(1000)
-
-    alpha1 = 1.0
-    amplitude = 3.0
-    alpha2 = 3.0
-    x_break = 5.0
-
-
-    c = parametricmodels.BentPowerLaw()(x, alpha1, amplitude, alpha2, x_break)
-
-    plt.figure()
-    plt.loglog(x,c)
-    plt.savefig("bpl_model_test.png", format="png")
-    plt.close()
-
-    return
 
 
 def test_qpo():
@@ -135,6 +118,97 @@ class TestPowerLawModel(object):
 
         for x in xrange(1,10):
             eq_(pl_eqn(x, alpha, amplitude), self.pl(x, alpha, amplitude))
+
+
+class TestBentPowerLawModel(object):
+
+    def setUp(self):
+        self.x = np.arange(1000)
+        self.bpl = parametricmodels.BentPowerLaw()
+
+    def test_shape(self):
+        alpha1 = 1.0
+        amplitude = 3.0
+        alpha2 = 3.0
+        x_break = 5.0
+
+        c = self.bpl(self.x, alpha1, amplitude, alpha2, x_break)
+        assert c.shape == self.x.shape
+
+
+    def test_value(self):
+        ## TODO: Need to write a meaningful test for this
+        alpha1 = 1.0
+        amplitude = 3.0
+        alpha2 = 3.0
+        x_break = 5.0
+
+        bpl_eqn = lambda x, i, a: np.exp(-i*np.log(x) + a)
+        pass
+
+
+class TestQPOModel(object):
+
+    def setUp(self):
+        self.x = np.arange(1000)
+        self.qpo = parametricmodels.QPO()
+
+    def test_shape(self):
+        gamma = 1.0
+        amplitude = 2.0
+        x0 = 200.0
+
+        c = self.qpo(self.x, gamma, amplitude, x0)
+        assert c.shape == self.x.shape
+
+
+    def test_value(self):
+        gamma = 1.0
+        amplitude = 2.0
+        x0 = 200.0
+
+        qpo_func = lambda x, g, amp, cen: (np.exp(amp)/np.pi)*0.5*np.exp(g)/((x-cen)**2.0+(0.5*np.exp(g))**2.0)
+        for x in xrange(1, 20):
+            assert np.allclose(qpo_func(x, gamma, amplitude, x0), self.qpo(x, gamma, amplitude, x0), atol=1.e-10)
+
+
+
+
+class TestCombinedModels(object):
+
+    def setUp(self):
+        self.x = np.arange(1000)
+
+
+        ## number of parameters for the different models
+        self.npar_const = 1
+        self.npar_powerlaw = 2
+        self.npar_bentpowerlaw = 4
+        self.npar_qpo = 3
+
+
+    def npar_equal(self, model1, model2):
+        mod = parametricmodels.CombinedModel([model1, model2])
+        npar_model1 = self.__getattribute__("npar_"+mod.name[0])
+        npar_model2 = self.__getattribute__("npar_"+mod.name[1])
+        eq_(mod.npar, npar_model1+npar_model2)
+
+
+    def test_model(self):
+        """
+        gamma = 0.5
+        norm = 3.0
+        x0 = 200.0
+        a = 2.0
+        """
+        models = [parametricmodels.Const,
+                parametricmodels.PowerLaw,
+                parametricmodels.BentPowerLaw,
+                parametricmodels.QPO]
+
+        for m1 in models:
+            for m2 in models:
+                self.npar_equal(m1, m2)
 
 
 
