@@ -1,5 +1,5 @@
 import numpy as np
- import parametricmodels
+import parametricmodels
 
 
 class Posterior(object):
