@@ -1,9 +1,5 @@
 import numpy as np
-import scipy.misc
- 
-import parametricmodels
-
-logmin = -10000000000000000.0
+ import parametricmodels
 
 
 class Posterior(object):
