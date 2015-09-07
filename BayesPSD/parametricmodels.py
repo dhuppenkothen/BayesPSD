@@ -207,14 +207,14 @@ class BentPowerLaw(ParametricModel):
         logz = (alpha2 - alpha1)*(np.log(x) - x_break)
 
         ### be careful with very large or very small values
-        logqsum = sum(np.where(logz<-100, 1.0, 0.0))
+        logqsum = sum(np.where(logz < -100, 1.0, 0.0))
         if logqsum > 0.0:
-            logq = np.where(logz<-100, 1.0, logz)
+            logq = np.where(logz < -100, 1.0, logz)
         else:
             logq = logz
-        logqsum = np.sum(np.where((-100<=logz) & (logz<=100.0), np.log(1.0 + np.exp(logz)), 0.0))
+        logqsum = np.sum(np.where((-100 <= logz) & (logz <= 100.0), np.log(1.0 + np.exp(logz)), 0.0))
         if logqsum > 0.0:
-            logqnew = np.where((-100<=logz) & (logz<=100.0), np.log(1.0 + np.exp(logz)), logq)
+            logqnew = np.where((-100 <= logz) & (logz <= 100.0), np.log(1.0 + np.exp(logz)), logq)
         else:
             logqnew = logq
 
@@ -277,25 +277,129 @@ class QPO(ParametricModel):
         gamma = np.exp(gamma)
         amplitude = np.exp(amplitude)
 
-        alpha = amplitude*gamma/(math.pi*2.0)
-        y = alpha/((x - x0)**2.0 + gamma**2.0)
+        alpha = 0.5*amplitude*gamma/np.pi
+        y = alpha/((x - x0)**2.0 + (0.5*gamma)**2.0)
         return y
 
+
+class PowerLawConst(ParametricModel):
+
+    def __init__(self, hyperpars=None):
+        self.models = [PowerLaw(hyperpars), Const(hyperpars)]
+        npar = 3 ## number of parameters in the model
+        name = "powerlawconst" ## model name
+        parnames = ["alpha", "amplitude", "const"]
+        ParametricModel.__init__(self, npar, name, parnames)
+
+        if hyperpars is not None:
+            self.set_prior()
+
+
+    def set_prior(self):
+        """
+        Set the prior for the combined power law + constant model.
+        The hyperparameters for each individual model are set in the logprior function
+        of each model itself. All that's left to do here is add them together and make
+        sure the parameters get distributed in the right way.
+
+        """
+        def logprior(alpha, amplitude, const):
+                pp = self.models[0].logprior(alpha, amplitude) + \
+                     self.models[1].logprior(const)
+                return pp
+
+        self.logprior = logprior
+
+
+    def func(self, x, alpha, amplitude, const):
+        """
+        Power law model + constant
+
+        Parameters:
+        -----------
+        x: numpy.ndarray
+            The independent variable
+        alpha: float
+            The  power law index
+        amplitude: float
+            The *logarithm* of the normalization or amplitude of the power law
+        const: float
+            The *logarithm* of the constant background level
+
+        Returns:
+        --------
+        model: numpy.ndarray
+            The power law model for all values in x.
+        """
+        res = self.models[0].func(x, alpha, amplitude) + self.models[1].func(x, const)
+        return res
+
+
+class BentPowerLawConst(ParametricModel):
+
+    def __init__(self, hyperpars=None):
+        self.models = [BentPowerLaw(hyperpars), Const(hyperpars)]
+        npar = 5 ## number of parameters in the model
+        name = "bentpowerlawconst" ## model name
+        parnames = ["alpha1", "amplitude", "alpha2", "x_break", "const"]
+        ParametricModel.__init__(self, npar, name, parnames)
+
+        if hyperpars is not None:
+            self.set_prior()
+
+
+    def set_prior(self):
+        """
+        Set the prior for the combined bent power law + constant model.
+        The hyperparameters for each individual model are set in the logprior function
+        of each model itself. All that's left to do here is add them together and make
+        sure the parameters get distributed in the right way.
+
+        """
+        def logprior(alpha1, amplitude, alpha2, x_break, const):
+                pp = self.models[0].logprior(alpha1, amplitude, alpha2, x_break) + \
+                     self.models[1].logprior(const)
+                return pp
+
+        self.logprior = logprior
+
+
+    def func(self, x, alpha1, amplitude, alpha2, x_break, const):
+        """
+        Bent Power law model + constant
+
+        Parameters:
+        -----------
+        x: numpy.ndarray
+            The independent variable
+        alpha: float
+            The  power law index
+        amplitude: float
+            The *logarithm* of the normalization or amplitude of the power law
+        const: float
+            The *logarithm* of the constant background level
+
+        Returns:
+        --------
+        model: numpy.ndarray
+            The power law model for all values in x.
+        """
+        res = self.models[0].func(x, alpha1, amplitude, alpha2, x_break) + \
+              self.models[1].func(x, const)
+        return res
 
 
 class CombinedModel(object):
 
     def __init__(self, models, hyperpars="None"):
         ## initialize all models
-        self.models = [m(hyperpars) for m in models]
+        self.models = [m() for m in models]
 
         ## set the total number of parameters
         self.npar = np.sum([m.npar for m in self.models])
 
         ## set the name for the combined model
-        self.name = self.models[0].name
-        for m in self.models:
-            self.name += "+%s"%m.name
+        self.name = [m.name for m in self.models]
 
         ## set hyperparameters
         if hyperpars is not None:
@@ -323,11 +427,13 @@ class CombinedModel(object):
         model = np.zeros(x.shape[0])
         counter = 0
         for m in self.models:
-            model += m.func(pars[counter:counter+m.npar])
+            model += m.func(x, *pars[counter:counter+m.npar])
             counter += m.npar
         return model
 
 
+    def __call__(self, x, *pars):
+        return self.func(x, *pars)
 
 
 """
