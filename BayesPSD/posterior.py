@@ -11,11 +11,18 @@ class Posterior(object):
         ### model is a parametric model
         self.model = model
 
+    def logprior(self, t0):
+        print("If you're calling this method, something is wrong!")
+        return 0.0
+
 
     ### use standard definition of the likelihood as the product of all 
     def loglikelihood(self, t0, neg=False):
         loglike = np.sum(np.array([self.model(x, t0) for x in self.x]))
-        return -loglike
+        if neg:
+            return -loglike
+        else:
+            return loglike
 
     def __call__(self, t0, neg=False):
         lpost = self.loglikelihood(t0) + self.logprior(t0)
@@ -72,6 +79,7 @@ class PerPosterior(Posterior):
             parameters given.
         """
         assert hasattr(self.model, "logprior")
+        assert np.size(t0) == self.model.npar, "Input parameters must match model parameters!"
         return self.model.logprior(*t0)
 
 
@@ -93,10 +101,12 @@ class PerPosterior(Posterior):
             parameters given.
 
         """
-        funcval = self.model(self.ps.freq, *t0)
+        assert np.size(t0) == self.model.npar, "Input parameters must match model parameters!"
+
+        funcval = self.model(self.x, *t0)
 
         if self.m == 1:
-            res = -np.sum(np.log(funcval)) - np.sum(self.ps.ps/funcval)
+            res = -np.sum(np.log(funcval)) - np.sum(self.y/funcval)
         else:
             res = -2.0*self.m*(np.sum(np.log(funcval)) + np.sum(self.y/funcval) +
                                np.sum((2.0/float(2.*self.m) - 1.0)*np.log(self.y)))
@@ -108,6 +118,8 @@ class PerPosterior(Posterior):
             #print("res is infinite!")
             res = parametricmodels.logmin
 
-        return res
-
+        if neg:
+            return -res
+        else:
+            return res
 
