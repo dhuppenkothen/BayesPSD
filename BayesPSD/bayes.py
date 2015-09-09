@@ -335,7 +335,8 @@ class Bayes(object):
                  covfactor = 1.0,
                  parname = None,
                  noise = -1,
-                 use_emcee = True):
+                 use_emcee = True,
+                 search_freq = None):
 
 
         """
@@ -565,8 +566,10 @@ class Bayes(object):
             #print('len(binpowers): ' + str(len(binpowers)))
 
 
+            if searchfreq is None:
+                  searchfreq = [40.0, 70.0, 100.0, 300.0, 500.0, 1000.0]
             ## for 40 Hz: 
-            for bc in [40.0, 70.0, 100.0, 300.0, 500.0, 1000.0]:
+            for bc in searchfreq:
                 if bc > (binps.freq[1] - binps.freq[0]):
                     bind = np.searchsorted(binps.freq, bc) - 1
                     bpow = binpowers[bind]
