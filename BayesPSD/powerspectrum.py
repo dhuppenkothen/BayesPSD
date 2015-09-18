@@ -113,13 +113,14 @@ class PowerSpectrum(lightcurve.Lightcurve):
                 the binned powers
         """
 
-        minfreq = self.freq[1]*0.5
+        df = self.df
+        minfreq = self.freq[0] - 0.5*df
         maxfreq = self.freq[-1]
-        binfreq = [minfreq]
-        df = self.freq[1]
+        binfreq = [minfreq, minfreq + df]
         while binfreq[-1] <= maxfreq:
             binfreq.append(binfreq[-1] + df*(1.+f))
             df = binfreq[-1]-binfreq[-2]
+
         binps, bin_edges, binno = scipy.stats.binned_statistic(self.freq, self.ps, statistic="mean", bins=binfreq)
 
         nsamples = np.array([len(binno[np.where(binno == i)[0]]) for i in xrange(np.max(binno))])
