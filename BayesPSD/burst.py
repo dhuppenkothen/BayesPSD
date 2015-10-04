@@ -6,7 +6,7 @@ from . import lightcurve
 from . import powerspectrum
 from . import bayes
 from . import mcmc
-from .parametricmodels import pl, bpl
+#from .parametricmodels import pl, bpl
 
 #### CLASS BURST ####################
 #

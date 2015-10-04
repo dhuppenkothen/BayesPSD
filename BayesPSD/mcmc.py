@@ -67,7 +67,7 @@ class MarkovChainMonteCarlo(object):
         If possible, make a MAP fit and use the MAP parameters here.
 
         The length of topt needs to match the number of parameters used
-        in whatever function is stored in lpost.func
+        in whatever function is stored in lpost.model
 
     tcov: {array-like}
         The variances and covarianced between parameters used to generate an
@@ -81,7 +81,7 @@ class MarkovChainMonteCarlo(object):
         that it requires fewer steps of the Markov chains.
 
         popt needs to have dimensions (k,k), where k is the number of parameters
-        taken by lpost.func
+        taken by lpost.model
 
     covfactor : float, optional, default 1.0
         A tuning parameter for the MCMC step. Used only in
@@ -504,7 +504,7 @@ class MarkovChainMonteCarlo(object):
 
         This method uses the results of an MCMC run to
         pick samples from the posterior and use the function
-        stored in self.lpost.func to create a power spectral form.
+        stored in self.lpost.model to create a power spectral form.
 
         In order to transform this into a model periodogram,
         it picks for each frequency from an exponential distribution
@@ -598,7 +598,7 @@ class MetropolisHastings(object):
         If possible, make a MAP fit and use the MAP parameters here.
 
         The length of topt needs to match the number of parameters used
-        in whatever function is stored in lpost.func
+        in whatever function is stored in lpost.model
 
     tcov: {array-like}
         The variances and covarianced between parameters used to generate an
@@ -612,7 +612,7 @@ class MetropolisHastings(object):
         that it requires fewer steps of the Markov chains.
 
         popt needs to have dimensions (k,k), where k is the number of parameters
-        taken by lpost.func
+        taken by lpost.model
 
     lpost : Posterior object
         An instance of the class Posterior or one of its subclasses;
@@ -687,7 +687,7 @@ class MetropolisHastings(object):
         ### set up array
         ttemp, logp = [], []
         ttemp.append(self.t0)
-        #lpost = posterior.PerPosterior(self.ps, self.func)
+        #lpost = posterior.PerPosterior(self.ps, self.model)
         logp.append(self.lpost(self.t0, neg=False))
 
         for t in np.arange(self.niter-1)+1:

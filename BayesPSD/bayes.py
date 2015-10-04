@@ -341,14 +341,14 @@ class Bayes(object):
         """
         Find periodicities in observed data and compute significance via MCMCs.
 
-        First, fit the periodogram with func and compute the
+        First, fit the periodogram with model and compute the
         maximum-a-posteriori (MAP) estimate.
         Divide the data by the MAP model; for a perfect data-model fit,
         the resulting residuals should follow a chi-square distribution
         with two degrees of freedom.
         Find the highest power in the residuals and its frequency.
 
-        Sample the posterior distribution of parameters for func using MCMC,
+        Sample the posterior distribution of parameters for model using MCMC,
         and create fake periodograms from samples of the posterior.
         For each fake periodogram, find the MAP estimate, divide out the
         MAP model and find the highest power in that periodogram.
@@ -361,7 +361,7 @@ class Bayes(object):
         Parameters
         ----------
 
-        func : function
+        model : function
             Parametric model for the periodogram.
             Needs to be a function that takes an array of frequencies and
             k parameters, and returns an array of model powers.
@@ -369,9 +369,9 @@ class Bayes(object):
             level, and this parameter should be last!
 
         par : {list, array-like}
-            Input guesses for the parameters taken by func.
+            Input guesses for the parameters taken by model.
             The number of elements in this list or array must match the
-            number of parameters k taken by func.
+            number of parameters k taken by model.
 
         fitmethod : string, optional, default "bfgs"
             Choose the optimization algorithm used when minimizing the
@@ -406,7 +406,7 @@ class Bayes(object):
             plotting
 
         noise: int, optional, default -1
-            The index for the noise parameter in func.
+            The index for the noise parameter in model.
             In the pre-defined models, this index is *always* -1.
 
         use_emcee : boolean, optional, default True
@@ -698,7 +698,7 @@ class Bayes(object):
         Parameters
         ----------
 
-        func : function
+        model : function
             Parametric model for the periodogram.
             Needs to be a function that takes an array of frequencies and
             k parameters, and returns an array of model powers.
@@ -706,9 +706,9 @@ class Bayes(object):
             level, and this parameter should be last!
 
         par : {list, array-like}
-            Input guesses for the parameters taken by func.
+            Input guesses for the parameters taken by model.
             The number of elements in this list or array must match the
-            number of parameters k taken by func.
+            number of parameters k taken by model.
 
         fitmethod : string, optional, default "bfgs"
             Choose the optimization algorithm used when minimizing the
@@ -743,7 +743,7 @@ class Bayes(object):
             plotting
 
         noise: int, optional, default -1
-            The index for the noise parameter in func.
+            The index for the noise parameter in model.
             In the pre-defined models, this index is *always* -1.
 
         use_emcee : boolean, optional, default True

@@ -302,8 +302,8 @@ class PerMaxLike(MaxLikelihood):
         ## don't want to fit zeroth frequency, so we'll make a temporary
         ## power spectrum object that doesn't have the zeroth frequency in it
         pstemp = powerspectrum.PowerSpectrum()
-        pstemp.freq = self.x[1:]
-        pstemp.ps = self.y[1:]
+        pstemp.freq = self.x
+        pstemp.ps = self.y
         pstemp.df = self.ps.df
 
         lposterior = posterior.PerPosterior(pstemp, model, m=self.ps.m)

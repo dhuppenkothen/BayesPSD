@@ -170,6 +170,8 @@ class BentPowerLaw(ParametricModel):
         x_break_min = hyperpars["x_break_min"]
         x_break_max = hyperpars["x_break_max"]
 
+
+
         def logprior(alpha1, amplitude, alpha2, x_break):
             p_alpha1 = (alpha1 >= alpha1_min and alpha1 <= alpha1_max)/(alpha1_max-alpha1_min)
             p_amplitude = (amplitude >= amplitude_min and amplitude <= amplitude_max)/(amplitude_max-amplitude_min)
@@ -282,6 +284,61 @@ class QPO(ParametricModel):
         return y
 
 
+
+class FixedCentroidQPO(ParametricModel):
+
+    def __init__(self, x0, hyperpars=None):
+        self.x0 = x0
+        npar = 3
+        name = "fixedcentroidqpo"
+        parnames = ["gamma", "A", "const"]
+        ParametricModel.__init__(self, npar, name, parnames)
+        if hyperpars is not None:
+            self.set_prior(hyperpars)
+
+
+    def set_prior(self, hyperpars):
+
+        gamma_min = hyperpars["gamma_min"]
+        gamma_max = hyperpars["gamma_max"]
+        amplitude_min= hyperpars["amplitude_min"]
+        amplitude_max = hyperpars["amplitude_max"]
+        a_mean = hyperpars["a_mean"]
+        a_var = hyperpars["a_var"]
+
+        def logprior(gamma, amplitude, const):
+            p_gamma = (gamma >= gamma_min and gamma <= gamma_max)/(gamma_max-gamma_min)
+            p_amplitude = (amplitude >= amplitude_min and amplitude <= amplitude_max)/(amplitude_max-amplitude_min)
+            p_const= scipy.stats.norm.pdf(const, a_mean, a_var)
+
+            pp = p_gamma*p_amplitude*p_const
+            if pp == 0.0:
+                return logmin
+            else:
+                return np.log(pp)
+
+        self.logprior = logprior
+
+
+    def func(self, x, gamma, amplitude, const):
+        """
+        Lorentzian profile for fitting QPOs.
+
+        Parameters:
+        -----------
+        x: numpy.ndarray
+            The independent variable
+        gamma: float
+            The width of the Lorentzian profile
+        amplitude: float
+            The height or amplitude of the Lorentzian profile
+        """
+        y = QPO.func(self, x, gamma, amplitude, self.x0)
+        y += const
+        return y
+
+
+
 class PowerLawConst(ParametricModel):
 
     def __init__(self, hyperpars=None):
@@ -389,9 +446,10 @@ class BentPowerLawConst(ParametricModel):
         return res
 
 
+
 class CombinedModel(object):
 
-    def __init__(self, models, hyperpars="None"):
+    def __init__(self, models, hyperpars=None):
         ## initialize all models
         self.models = [m() for m in models]
 

@@ -133,3 +133,30 @@ class TestPerPosterior(object):
         post = -loglike - logprior
 
         assert np.isclose(post_test, post, atol=1.e-10)
+
+class TestPerPosteriorAveragedPeriodogram(object):
+
+    def setUp(self):
+        m = 10
+        nfreq = 1000000
+        freq = np.arange(nfreq)
+        noise = scipy.stats.chi2(2.*m).rvs(size=nfreq)/np.float(m)
+        power = noise
+
+        ps = powerspectrum.PowerSpectrum()
+        ps.freq = freq
+        ps.ps = power
+        ps.m = m
+        ps.df = freq[1]-freq[0]
+        ps.norm = "leahy"
+
+        self.ps = ps
+        self.a_mean, self.a_var = 2.0, 1.0
+
+        self.model = parametricmodels.Const(hyperpars={"a_mean":self.a_mean, "a_var":self.a_var})
+
+    def test_likelihood(self):
+        t0 = [2.0]
+        m = self.model(self.ps.freq[1:], t0)
+
+
