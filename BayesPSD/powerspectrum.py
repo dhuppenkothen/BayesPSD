@@ -57,13 +57,12 @@ class PowerSpectrum(lightcurve.Lightcurve):
         f2 = fourier.conjugate() ### do conjugate
         ff = f2*fourier   ### multiply both together
         fr = np.array([x.real for x in ff]) ### get out the real part of ff
-        ps = 2.0*fr[0: int(nel/2)]/nphots
 
         if norm.lower() in ['leahy']:
-            self.ps = ps
+            self.ps = 2.0*fr[0: int(nel/2)]/nphots
             
         elif norm.lower() in ['rms']:
-            self.ps = ps/(df*nphots)
+            self.ps = 2.0*lc.tseg*fr/(np.mean(lc.countrate)**2.0)
 
         elif norm.lower() in ['variance', 'var']:
             self.ps = ps*nphots/len(lc.counts)**2.0
