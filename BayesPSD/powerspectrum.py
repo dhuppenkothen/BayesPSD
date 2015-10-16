@@ -48,21 +48,28 @@ class PowerSpectrum(lightcurve.Lightcurve):
         else:
             nphots = nphot
         
-        nel = np.round(lc.tseg/lc.res)
+        #nel = np.round(lc.tseg/lc.res)
+        nel = len(lc.counts)
 
         df = 1.0/lc.tseg
         fnyquist = 0.5/(lc.time[1]-lc.time[0])
 
-        fourier= scipy.fft(lc.counts) ### do Fourier transform
-        f2 = fourier.conjugate() ### do conjugate
-        ff = f2*fourier   ### multiply both together
-        fr = np.array([x.real for x in ff]) ### get out the real part of ff
+        fourier= scipy.fftpack.fft(lc.counts) ### do Fourier transform
+        #f2 = fourier.conjugate() ### do conjugate
+        #ff = f2*fourier   ### multiply both together
+        #fr = np.array([x.real for x in ff]) ### get out the real part of ff
+        fr = np.abs(fourier)**2.#/np.float(len(lc.counts))**2.
+
 
         if norm.lower() in ['leahy']:
-            self.ps = 2.0*fr[0: int(nel/2)]/nphots
-            
+            #self.ps = 2.0*fr[0: int(nel/2)]/nphots
+            p = np.abs(fourier[:nel/2])**2.
+            self.ps = 2.*p/np.sum(lc.counts)
+        
         elif norm.lower() in ['rms']:
-            self.ps = 2.0*lc.tseg*fr/(np.mean(lc.countrate)**2.0)
+            #self.ps = 2.0*lc.tseg*fr/(np.mean(lc.countrate)**2.0)
+            p = fr[:nel/2+1]/np.float(nel**2.)
+            self.ps = p*2.*lc.tseg/(np.mean(lc.counts)**2.0)
 
         elif norm.lower() in ['variance', 'var']:
             self.ps = ps*nphots/len(lc.counts)**2.0
@@ -72,6 +79,16 @@ class PowerSpectrum(lightcurve.Lightcurve):
         self.nphots = nphots
         self.n = len(lc.counts)
         self.m = m
+
+
+    def compute_fractional_rms(minfreq, maxfreq):
+        minind = self.freq.searchsorted(minfreq)
+        maxind = self.freq.searchsorted(maxfreq)
+        powers = self.ps[minind:maxind]
+        if self.norm == "leahy":
+            rms = np.sqrt(np.sum(powers)/(self.nphots))       
+        elif self.norm == "rms":
+            rms = np.sqrt(np.sum(powers*self.df))
 
     def rebinps(self, res, verbose=False):
         ### frequency range of power spectrum
