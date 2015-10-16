@@ -2,6 +2,7 @@ import numpy as np
 import math
 import scipy
 import scipy.optimize
+import scipy.fftpack
 
 from . import lightcurve
 
