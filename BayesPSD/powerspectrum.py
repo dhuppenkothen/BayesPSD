@@ -76,20 +76,25 @@ class PowerSpectrum(lightcurve.Lightcurve):
             self.ps = ps*nphots/len(lc.counts)**2.0
 
         self.df = df
-        self.freq = np.arange(len(ps))*df + df/2.
+        self.freq = np.arange(len(self.ps))*self.df + self.df/2.
         self.nphots = nphots
         self.n = len(lc.counts)
         self.m = m
 
 
-    def compute_fractional_rms(minfreq, maxfreq):
+    def compute_fractional_rms(self,minfreq, maxfreq, bkg=None):
         minind = self.freq.searchsorted(minfreq)
         maxind = self.freq.searchsorted(maxfreq)
-        powers = self.ps[minind:maxind]
+        if bkg is None:
+            powers = self.ps[minind:maxind]
+        else:
+            powers = self.ps[minind:maxind] - bkg
         if self.norm == "leahy":
             rms = np.sqrt(np.sum(powers)/(self.nphots))       
         elif self.norm == "rms":
             rms = np.sqrt(np.sum(powers*self.df))
+
+        return rms
 
     def rebinps(self, res, verbose=False):
         ### frequency range of power spectrum
@@ -97,7 +102,7 @@ class PowerSpectrum(lightcurve.Lightcurve):
         ### calculate number of new bins in rebinned spectrum
         bins = np.floor(flen/res) 
         ### calculate *actual* new resolution
-        self.bindf = flen/bins
+        bindf = flen/bins
         ### rebin power spectrum to new resolution
         binfreq, binps, dt = self._rebin_new(self.freq, self.ps, res, method='mean')
         newps = PowerSpectrum()
@@ -106,6 +111,7 @@ class PowerSpectrum(lightcurve.Lightcurve):
         newps.df = dt
         newps.nphots = binps[0]
         newps.n = 2*len(binps)
+        newps.m = self.m*int(bindf/self.df)
         return newps
 
 
