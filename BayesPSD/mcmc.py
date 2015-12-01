@@ -567,6 +567,7 @@ class MarkovChainMonteCarlo(object):
             mps.df = self.x[1] - self.x[0]
             mps.n = 2.0*len(self.x)
             mps.nphots = mpower[0]
+            mps.m = self.m
 
             fps.append(mps)
 
