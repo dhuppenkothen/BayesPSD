@@ -39,7 +39,7 @@ class Lightcurve(object):
             if self.format == "seconds":
                 self.countrate = self.counts/self.res
             else:
-                print("I am here!")
+                #print("I am here!")
                 self.countrate = self.counts/(self.res*dayseconds)
             self.tseg = self.time[-1] - self.time[0] + self.res
 
@@ -289,11 +289,12 @@ class Lightcurve(object):
         assert self.format == "seconds", "Time format of the light curve must be seconds to"\
                                          "be able to convert to MJD"
 
-        self.time /= dayseconds
-        self.time += mjdobs
-        self.tseg /= dayseconds
-        self.res /= dayseconds
-        return
+        time_mjd = self.time/dayseconds + mjdobs
+        tseg_mjd = self.tseg/dayseconds
+        res_mjd = self.res/dayseconds
+
+        lc_mjd = Lightcurve(time=time_mjd, counts=self.counts, format="mjd")
+        return lc_mjd
 
 
     def convert_mjd_to_seconds(self):
@@ -301,8 +302,9 @@ class Lightcurve(object):
         Convert time format of the light curve from MJD to (MET) seconds.
         """
 
-        self.time *= dayseconds
-        self.tseg *= dayseconds
-        self.res *= dayseconds
+        time_sec = self.time*dayseconds
+        tseg_sec = self.time*dayseconds
+        res_sec = self.time*dayseconds
 
-        return
+        lc_sec = Lightcurve(time=time_sec, counts=self.counts, format="seconds")
+        return lc_sec
