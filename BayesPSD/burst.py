@@ -1,12 +1,16 @@
 import numpy as np
-import cPickle as pickle
 
-from . import utils
-from . import lightcurve
-from . import powerspectrum
-from . import bayes
-from . import mcmc
-from .parametricmodels import pl, bpl
+try:
+    import cPickle as pickle
+except ImportError:
+    import pickle
+
+from BayesPSD import utils
+from BayesPSD import lightcurve
+from BayesPSD import powerspectrum
+from BayesPSD import bayes
+from BayesPSD import mcmc
+from BayesPSD.parametricmodels import pl, bpl
 
 #### CLASS BURST ####################
 #

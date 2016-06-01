@@ -24,8 +24,8 @@ class Lightcurve(object):
         self.format = format # time format
         if counts is None:
             if verbose == True:
-                print "You put in time of arrivals."
-                print "Time resolution of light curve: " + str(timestep)
+                print("You put in time of arrivals.")
+                print("Time resolution of light curve: " + str(timestep))
             ### TOA has a list of photon times of arrival
             self.toa = time
             self.ncounts = len(self.toa)
@@ -93,9 +93,9 @@ class Lightcurve(object):
                 self.counts = np.array(counts) 
             ### time resolution of light curve
             if verbose == True:
-                print "Please note: "
-                print "You specified the time resolution as: " + str(timestep)+ "."
-                print "The actual time resolution of the light curve is: " + str(self.res) +"."
+                print("Please note: ")
+                print("You specified the time resolution as: " + str(timestep)+ ".")
+                print("The actual time resolution of the light curve is: " + str(self.res) +".")
 
             if self.format == "seconds":
                 self.countrate = self.counts/self.res
@@ -132,7 +132,7 @@ class Lightcurve(object):
         ### calculate number of bins in new light curve
         nbins = math.floor(self.tseg/newres)+1
         self.binres = self.tseg/nbins
-        print "New time resolution is: " + str(self.binres)
+        print("New time resolution is: " + str(self.binres))
 
         if implementation in ["o", "old"]:
             self.bintime, self.bincounts, self.binres = self._rebin(self.time, self.counts, nbins, method, verbose=verbose)
@@ -247,21 +247,17 @@ class Lightcurve(object):
         output = []
         for i in numpy.arange(0, len(counts), step_size):
             total = 0
-            #print "Bin is " + str(i)
 
             prev_frac = int(i+1) - i
             prev_bin = int(i)
-            #print "Fractional part of bin %d is %f"  %(prev_bin, prev_frac)
             total += prev_frac * counts[prev_bin]
 
             if i + step_size < len(time):
                 # Fractional part of next bin:
                 next_frac = i+step_size - int(i+step_size)
                 next_bin = int(i+step_size)
-                #print "Fractional part of bin %d is %f"  %(next_bin, next_frac)
                 total += next_frac * counts[next_bin]
 
-            #print "Fully included bins: %d to %d" % (int(i+1), int(i+step_size)-1)
             total += sum(counts[int(i+1):int(i+step_size)])
             output.append(total)
 

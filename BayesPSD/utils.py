@@ -235,7 +235,6 @@ class Data(object):
         if not gti:
             gti = self.gti
         gti=_checkinput(gti)
-        #print gti
         filteredphotons = []
         ### Use _unbarycentered_ time to filter GTIs
         ### NEED TO CHECK WHETHER THAT IS TRUE FOR BOTH

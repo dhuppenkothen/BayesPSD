@@ -27,7 +27,7 @@ import scipy.stats
 import scipy.signal
 import copy
 
-from .parametricmodels import combine_models
+from BayesPSD.parametricmodels import combine_models
 
 try:
     from statsmodels.tools.numdiff import approx_hess
@@ -37,8 +37,8 @@ except ImportError:
 
 
 ### own imports
-from . import posterior
-from . import powerspectrum
+from BayesPSD import posterior
+from BayesPSD import powerspectrum
 
 ### global variables ####
 logmin = -100.0
@@ -178,8 +178,8 @@ class MaxLikelihood(object):
                 warnflag = aopt[6]
                 if warnflag == 1 :
                     print("*** ACHTUNG! Maximum number of iterations exceeded! ***")
-                elif warnflag == 2:
-                    print("Gradient and/or function calls not changing!")
+                #elif warnflag == 2:
+                    #print("Gradient and/or function calls not changing!")
 
 
             ## all other methods: Simplex, Powell, Gradient
@@ -234,7 +234,7 @@ class MaxLikelihood(object):
                     phess = approx_hess(aopt[0], optfunc, neg=args)
 
                     ### covariance is the inverse of the Hessian
-                    print "Hessian (empirical): " + str(phess)
+                    print("Hessian (empirical): " + str(phess))
 
                     covar = np.linalg.inv(phess)
                     stderr = np.sqrt(np.diag(covar))

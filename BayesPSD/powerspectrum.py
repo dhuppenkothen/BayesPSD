@@ -4,7 +4,7 @@ import scipy
 import scipy.optimize
 import scipy.fftpack
 
-from . import lightcurve
+from BayesPSD import lightcurve
 
 
 def add_ps(psall, method='avg'):
@@ -36,7 +36,7 @@ class PowerSpectrum(lightcurve.Lightcurve):
 
         elif not lc is None and not counts is None:
             if verbose == True:
-                print "You put in a standard light curve (I hope). Converting to object of type Lightcurve"
+                print("You put in a standard light curve (I hope). Converting to object of type Lightcurve")
             lc = lightcurve.Lightcurve(lc, counts, verbose=verbose)
         else:
             self.freq = None

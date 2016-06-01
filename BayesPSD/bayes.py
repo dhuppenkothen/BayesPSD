@@ -15,7 +15,11 @@ from __future__ import print_function
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MaxNLocator
 
-import cPickle as pickle
+try:
+    import cPickle as pickle
+except ImportError:
+    import pickle
+
 import copy
 
 ### GENERAL IMPORTS ###
@@ -23,14 +27,12 @@ import numpy as np
 
 
 ### OWN SCRIPTS
-from . import utils
-from . import powerspectrum
-from . import mcmc
+from BayesPSD import utils
+from BayesPSD import powerspectrum
+from BayesPSD import mcmc
 
-from . import mle
-from . import posterior
-
-
+from BayesPSD import mle
+from BayesPSD import posterior
 
 
 
@@ -336,7 +338,7 @@ class Bayes(object):
                  parname = None,
                  noise = -1,
                  use_emcee = True,
-                 search_freq = None):
+                 searchfreq = None):
 
 
         """
@@ -498,9 +500,9 @@ class Bayes(object):
             except KeyboardInterrupt:
                 break
 
-            except:
-                print("Simulation failed! Continuing ...")
-                continue 
+            #except:
+            #    print("Simulation failed! Continuing ...")
+            #    continue 
 #               print('popt' + str(i) + 'd : ' + str(fitpars['popt']))
 
 #             print('popt3: ' + str(fitpars['popt']))
@@ -569,6 +571,7 @@ class Bayes(object):
             if searchfreq is None:
                   searchfreq = [40.0, 70.0, 100.0, 300.0, 500.0, 1000.0]
             ## for 40 Hz: 
+            print(searchfreq)
             for bc in searchfreq:
                 if bc > (binps.freq[1] - binps.freq[0]):
                     bind = np.searchsorted(binps.freq, bc) - 1
@@ -582,7 +585,7 @@ class Bayes(object):
                     resfile('The upper limit on the rms amplitude at ' + str(bc) +
                             'Hz for a binning of ' + str(b) + ' is rms = ' + str(brms))
 
-                    bindict['bin' + str(b) + '_ul_' + str(int(bc)) + 'Hz'] = brms 
+                    bindict['bin' + str(b) + '_ul_%.4fHz'%bc] = brms 
                 else:
                     continue
 

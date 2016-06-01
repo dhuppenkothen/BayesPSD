@@ -19,8 +19,8 @@ except ImportError:
     print("Emcee and Acor not installed. Using Metropolis-Hastings algorithm for Markov Chain Monte Carlo simulations.")
     emcee_import = False
 
-from . import utils
-from . import powerspectrum
+from BayesPSD import utils
+from BayesPSD import powerspectrum
 
 
 

@@ -38,7 +38,7 @@ def qpo(freq, a, b, c, d=None):
 
     gamma = np.exp(a)
     norm = np.exp(b)
-    nu0 = np.exp(c)
+    nu0 = c
 
     alpha = norm*gamma/(math.pi*2.0)
     y = alpha/((freq - nu0)**2.0 + gamma**2.0)

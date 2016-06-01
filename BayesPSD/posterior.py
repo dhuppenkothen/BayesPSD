@@ -1,7 +1,7 @@
 import numpy as np
 import scipy.misc
  
-from .parametricmodels import pl, bpl, qpo, const
+from BayesPSD.parametricmodels import pl, bpl, qpo, const
 
 
 logmin = -10000000000000000.0
