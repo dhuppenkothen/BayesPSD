@@ -4,6 +4,7 @@ from matplotlib.ticker import MaxNLocator
 
 import numpy as np
 import math
+import sys
 
 import scipy
 import scipy.optimize
@@ -236,7 +237,7 @@ class MarkovChainMonteCarlo(object):
                 print("D was negative. No clue why that's the case! Not computing autocorrelation time ...")
                 self.acor = None
             except:
-                print("Autocorrelation time calculation failed due to an unknown error: " + sys.exc_info()[0] + ". Not computing autocorrelation time.")
+                print("Autocorrelation time calculation failed due to an unknown error: " + str(sys.exc_info()[0]) + ". Not computing autocorrelation time.")
                 self.acor = None
 
         ### if emcee_use == False, then use MH algorithm as defined in MarkovChain object below
